@@ -4,6 +4,8 @@ Public integration documentation for **Control**, an on-chain bonding-curve toke
 
 This repository documents how to integrate **Buy** and **Sell** with the Control program from your own client (DEX aggregator, trading bot, portfolio tool, custom UI).
 
+> Prefer a browsable HTML version? The same docs are mirrored at <https://ctrl.print.world/docs/>.
+
 ## Program
 
 | Field | Value |
