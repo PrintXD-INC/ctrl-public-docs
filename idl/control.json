@@ -3,2114 +3,2147 @@
   "name": "print_control_v1",
   "instructions": [
     {
-      "name": "InitializeConfig",
+      "name": "initialize_config",
+      "discriminator": [
+        0
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Payer and initial admin"
           ]
         },
         {
           "name": "config",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 0
-      }
+      "args": []
     },
     {
-      "name": "InitializeCurve",
+      "name": "initialize_curve",
+      "discriminator": [
+        1
+      ],
       "accounts": [
         {
           "name": "user",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "User paying for curve creation"
           ]
         },
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin co-signer"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint (Token-2022)"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 1
-      }
+      "args": []
     },
     {
-      "name": "Buy",
+      "name": "buy",
+      "discriminator": [
+        2
+      ],
       "accounts": [
         {
           "name": "user",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Buyer"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "vaultAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "vault_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
         },
         {
-          "name": "userAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "user_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "User token account"
           ]
         },
         {
-          "name": "creatorFeeVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_fee_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
         },
         {
-          "name": "protocolFeeWallet",
-          "isMut": true,
-          "isSigner": false,
+          "name": "protocol_fee_wallet",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
         },
         {
-          "name": "lpEscrow",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_escrow",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
         },
         {
-          "name": "communityPool",
-          "isMut": true,
-          "isSigner": false,
+          "name": "community_pool",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Per-token community pool PDA [\"community-pool\", mint]"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 2
-      }
+      "args": []
     },
     {
-      "name": "Sell",
+      "name": "sell",
+      "discriminator": [
+        3
+      ],
       "accounts": [
         {
           "name": "user",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Seller"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "vaultAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "vault_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
         },
         {
-          "name": "userAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "user_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "User token account"
           ]
         },
         {
-          "name": "creatorFeeVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_fee_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
         },
         {
-          "name": "protocolFeeWallet",
-          "isMut": true,
-          "isSigner": false,
+          "name": "protocol_fee_wallet",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
         },
         {
-          "name": "lpEscrow",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_escrow",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
         },
         {
-          "name": "communityPool",
-          "isMut": true,
-          "isSigner": false,
+          "name": "community_pool",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Per-token community pool PDA [\"community-pool\", mint]"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 3
-      }
+      "args": []
     },
     {
-      "name": "WithdrawLiquidity",
+      "name": "withdraw_liquidity",
+      "discriminator": [
+        4
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
           "name": "destination",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "SOL destination wallet"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 4
-      }
+      "args": []
     },
     {
-      "name": "AdminFreeze",
+      "name": "admin_freeze",
+      "discriminator": [
+        5
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_account",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Token account to freeze"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 5
-      }
+      "args": []
     },
     {
-      "name": "AdminThaw",
+      "name": "admin_thaw",
+      "discriminator": [
+        6
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "tokenAccount",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_account",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Token account to thaw"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 6
-      }
+      "args": []
     },
     {
-      "name": "FreezeCurve",
+      "name": "freeze_curve",
+      "discriminator": [
+        7
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 7
-      }
+      "args": []
     },
     {
-      "name": "ThawCurve",
+      "name": "thaw_curve",
+      "discriminator": [
+        8
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 8
-      }
+      "args": []
     },
     {
-      "name": "CreateToken",
+      "name": "create_token",
+      "discriminator": [
+        9
+      ],
       "accounts": [
         {
           "name": "mint",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "New mint keypair"
           ]
         },
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Payer and token creator"
           ]
         },
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin co-signer"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
-          "name": "protocolFeeWallet",
-          "isMut": true,
-          "isSigner": false,
+          "name": "protocol_fee_wallet",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
         },
         {
-          "name": "vaultAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "vault_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Vault token account"
           ]
         },
         {
-          "name": "lpEscrow",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_escrow",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
         },
         {
-          "name": "creatorFeeVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_fee_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         },
         {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "ata_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Associated token program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 9
-      }
+      "args": []
     },
     {
-      "name": "UpdateConfig",
+      "name": "update_config",
+      "discriminator": [
+        10
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Current admin"
           ]
         },
         {
           "name": "config",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 10
-      }
+      "args": []
     },
     {
-      "name": "MigrateToMeteora",
+      "name": "migrate_to_meteora",
+      "discriminator": [
+        11
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Admin payer"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "vaultAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "vault_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
         },
         {
-          "name": "lpEscrow",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_escrow",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
         },
         {
-          "name": "positionNftMint",
-          "isMut": true,
-          "isSigner": false,
+          "name": "position_nft_mint",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Position NFT mint PDA"
           ]
         },
         {
-          "name": "positionNftAccount",
-          "isMut": true,
-          "isSigner": false,
+          "name": "position_nft_account",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Position NFT token account"
           ]
         },
         {
           "name": "pool",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora pool"
           ]
         },
         {
           "name": "position",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora position"
           ]
         },
         {
-          "name": "tokenAVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_a_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora token A vault"
           ]
         },
         {
-          "name": "tokenBVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_b_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora token B vault"
           ]
         },
         {
-          "name": "payerTokenAAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "payer_token_a_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Payer control token ATA"
           ]
         },
         {
-          "name": "payerWsolAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "payer_wsol_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Payer wSOL ATA"
           ]
         },
         {
-          "name": "meteoraPoolAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "meteora_pool_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora pool authority"
           ]
         },
         {
-          "name": "tokenAMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_a_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control token mint"
           ]
         },
         {
-          "name": "tokenBMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_b_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "WSOL mint"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "SPL Token program"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         },
         {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "ata_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Associated token program"
           ]
         },
         {
-          "name": "meteoraProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "meteora_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora DAMM v2 program"
           ]
         },
         {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "event_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora event authority"
           ]
         },
         {
-          "name": "meteoraConfig",
-          "isMut": false,
-          "isSigner": false,
+          "name": "meteora_config",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora private config"
           ]
         },
         {
-          "name": "poolCreatorAuthority",
-          "isMut": false,
-          "isSigner": true,
+          "name": "pool_creator_authority",
+          "writable": false,
+          "signer": true,
           "docs": [
             "Pool creator authority signer"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 11
-      }
+      "args": []
     },
     {
-      "name": "WithdrawLpEscrow",
+      "name": "withdraw_lp_escrow",
+      "discriminator": [
+        12
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "lpEscrow",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_escrow",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
         },
         {
           "name": "destination",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "SOL destination"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 12
-      }
+      "args": []
     },
     {
-      "name": "TransferNftToFeeConfig",
+      "name": "transfer_nft_to_fee_config",
+      "discriminator": [
+        13
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Transaction payer"
           ]
         },
         {
           "name": "curve",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "positionNftAccount",
-          "isMut": true,
-          "isSigner": false,
+          "name": "position_nft_account",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Position NFT account"
           ]
         },
         {
-          "name": "newAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "new_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "New NFT authority"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 13
-      }
+      "args": []
     },
     {
-      "name": "ClaimCreatorFees",
+      "name": "claim_creator_fees",
+      "discriminator": [
+        14
+      ],
       "accounts": [
         {
           "name": "creator",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Token creator"
           ]
         },
         {
           "name": "curve",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "creatorFeeVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_fee_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
         },
         {
-          "name": "vaultWsolAta",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "vault_wsol_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Vault wSOL ATA"
           ]
         },
         {
-          "name": "creatorWsolAta",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "creator_wsol_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator wSOL ATA"
           ]
         },
         {
-          "name": "wsolMint",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "wsol_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "WSOL mint"
           ]
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "token_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "SPL Token program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 14
-      }
+      "args": []
     },
     {
-      "name": "InitializeFeeConfig",
+      "name": "initialize_fee_config",
+      "discriminator": [
+        15
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Admin and rent payer"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 15
-      }
+      "args": []
     },
     {
-      "name": "ClaimAndDistribute",
+      "name": "claim_and_distribute",
+      "discriminator": [
+        16
+      ],
       "accounts": [
         {
           "name": "cranker",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Crank caller"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         },
         {
           "name": "pool",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora pool"
           ]
         },
         {
           "name": "position",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora position"
           ]
         },
         {
-          "name": "positionNftAccount",
-          "isMut": false,
-          "isSigner": false,
+          "name": "position_nft_account",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Position NFT account"
           ]
         },
         {
-          "name": "feeReceiverA",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_receiver_a",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Token A fee receiver ATA"
           ]
         },
         {
-          "name": "feeReceiverB",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_receiver_b",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Token B fee receiver ATA"
           ]
         },
         {
-          "name": "tokenAVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_a_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Pool token A vault"
           ]
         },
         {
-          "name": "tokenBVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_b_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Pool token B vault"
           ]
         },
         {
-          "name": "tokenAMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_a_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token A mint"
           ]
         },
         {
-          "name": "tokenBMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_b_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token B mint"
           ]
         },
         {
-          "name": "creatorVaultWsol",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_vault_wsol",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator vault wSOL ATA"
           ]
         },
         {
-          "name": "protocolWallet",
-          "isMut": true,
-          "isSigner": false,
+          "name": "protocol_wallet",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Protocol wSOL ATA"
           ]
         },
         {
-          "name": "lpWsolAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_wsol_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP wallet wSOL ATA"
           ]
         },
         {
-          "name": "communityWallet",
-          "isMut": true,
-          "isSigner": false,
+          "name": "community_wallet",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Community wSOL ATA"
           ]
         },
         {
-          "name": "poolAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "pool_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora pool authority"
           ]
         },
         {
-          "name": "tokenAProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_a_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token A program"
           ]
         },
         {
-          "name": "tokenBProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_b_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token B program"
           ]
         },
         {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "event_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora event authority"
           ]
         },
         {
-          "name": "meteoraProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "meteora_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora DAMM v2 program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 16
-      }
+      "args": []
     },
     {
-      "name": "UpdateSplits",
+      "name": "update_splits",
+      "discriminator": [
+        17
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 17
-      }
+      "args": []
     },
     {
-      "name": "UpdateWallets",
+      "name": "update_wallets",
+      "discriminator": [
+        18
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 18
-      }
+      "args": []
     },
     {
-      "name": "GrowLiquidity",
+      "name": "grow_liquidity",
+      "discriminator": [
+        19
+      ],
       "accounts": [
         {
           "name": "cranker",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Crank caller"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         },
         {
-          "name": "lpWallet",
-          "isMut": false,
-          "isSigner": false,
+          "name": "lp_wallet",
+          "writable": false,
+          "signer": false,
           "docs": [
             "LP wallet PDA"
           ]
         },
         {
           "name": "pool",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora pool"
           ]
         },
         {
           "name": "position",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Meteora position"
           ]
         },
         {
-          "name": "positionNftAccount",
-          "isMut": false,
-          "isSigner": false,
+          "name": "position_nft_account",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Position NFT account"
           ]
         },
         {
-          "name": "lpWsol",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_wsol",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP wallet wSOL ATA"
           ]
         },
         {
-          "name": "feeConfigTokenA",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config_token_a",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config control token ATA"
           ]
         },
         {
-          "name": "feeConfigWsol",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config_wsol",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config wSOL ATA"
           ]
         },
         {
-          "name": "tokenAVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_a_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Pool token A vault"
           ]
         },
         {
-          "name": "tokenBVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "token_b_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Pool token B vault"
           ]
         },
         {
-          "name": "tokenAMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_a_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control token mint"
           ]
         },
         {
-          "name": "tokenBMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_b_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "WSOL mint"
           ]
         },
         {
-          "name": "poolAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "pool_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora pool authority"
           ]
         },
         {
-          "name": "tokenAProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_a_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         },
         {
-          "name": "tokenBProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_b_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "SPL Token program"
           ]
         },
         {
-          "name": "eventAuthority",
-          "isMut": false,
-          "isSigner": false,
+          "name": "event_authority",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora event authority"
           ]
         },
         {
-          "name": "meteoraProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "meteora_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora DAMM v2 program"
           ]
         },
         {
           "name": "referral",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Meteora referral account"
           ]
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "SPL Token program for transfers"
           ]
         },
         {
-          "name": "adminWsol",
-          "isMut": true,
-          "isSigner": false,
+          "name": "admin_wsol",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config admin wSOL ATA for reimbursement skim"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 19
-      }
+      "args": []
     },
     {
-      "name": "AdminWithdrawCreatorFees",
+      "name": "admin_withdraw_creator_fees",
+      "discriminator": [
+        20
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "creatorFeeVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_fee_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
         },
         {
           "name": "destination",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "SOL destination"
           ]
         },
         {
-          "name": "vaultWsolAta",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "vault_wsol_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Vault wSOL ATA"
           ]
         },
         {
-          "name": "destinationWsolAta",
-          "isMut": true,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "destination_wsol_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Destination wSOL ATA"
           ]
         },
         {
-          "name": "wsolMint",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "wsol_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "WSOL mint"
           ]
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false,
-          "isOptional": true,
+          "name": "token_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "SPL Token program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 20
-      }
+      "args": []
     },
     {
-      "name": "AdminWithdrawFeeConfig",
+      "name": "admin_withdraw_fee_config",
+      "discriminator": [
+        21
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         },
         {
-          "name": "tokenAMint",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token_a_mint",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
           "name": "destination",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "SOL destination"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 21
-      }
+      "args": []
     },
     {
-      "name": "AdminPdaWithdraw",
+      "name": "admin_pda_withdraw",
+      "discriminator": [
+        22
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "source",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Program-owned source PDA"
           ]
         },
         {
           "name": "destination",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "SOL destination"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 22
-      }
+      "args": []
     },
     {
-      "name": "CreateBuybackEngine",
+      "name": "create_buyback_engine",
+      "discriminator": [
+        23
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 23
-      }
+      "args": []
     },
     {
-      "name": "FundEngine",
+      "name": "fund_engine",
+      "discriminator": [
+        24
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 24
-      }
+      "args": []
     },
     {
-      "name": "EngineBuyCurve",
+      "name": "engine_buy_curve",
+      "discriminator": [
+        25
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin (auth)"
           ]
         },
         {
           "name": "engine",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Buyback engine PDA (acts as user)"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "curve",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Bonding curve PDA"
           ]
         },
         {
           "name": "mint",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token mint"
           ]
         },
         {
-          "name": "vaultAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "vault_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
         },
         {
-          "name": "engineTokenAta",
-          "isMut": true,
-          "isSigner": false,
+          "name": "engine_token_ata",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Engine's Token-2022 ATA (destination)"
           ]
         },
         {
-          "name": "creatorFeeVault",
-          "isMut": true,
-          "isSigner": false,
+          "name": "creator_fee_vault",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
         },
         {
-          "name": "protocolFeeWallet",
-          "isMut": true,
-          "isSigner": false,
+          "name": "protocol_fee_wallet",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
         },
         {
-          "name": "lpEscrow",
-          "isMut": true,
-          "isSigner": false,
+          "name": "lp_escrow",
+          "writable": true,
+          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
         },
         {
-          "name": "communityPool",
-          "isMut": true,
-          "isSigner": false,
+          "name": "community_pool",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Per-token community pool PDA"
           ]
         },
         {
-          "name": "token2022Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "token2022_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Token-2022 program"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         },
         {
-          "name": "controlV1Program",
-          "isMut": false,
-          "isSigner": false,
+          "name": "control_v1_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control V1 program (self-CPI target — must match the program id)"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 25
-      }
+      "args": []
     },
     {
-      "name": "EngineBuyMeteora",
+      "name": "engine_buy_meteora",
+      "discriminator": [
+        26
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 26
-      }
+      "args": []
     },
     {
-      "name": "EngineDistribute",
+      "name": "engine_distribute",
+      "discriminator": [
+        27
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 27
-      }
+      "args": []
     },
     {
-      "name": "ClaimUserTokens",
+      "name": "claim_user_tokens",
+      "discriminator": [
+        28
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 28
-      }
+      "args": []
     },
     {
-      "name": "CloseEngine",
+      "name": "close_engine",
+      "discriminator": [
+        29
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 29
-      }
+      "args": []
     },
     {
-      "name": "AdminWithdrawCommunityPool",
+      "name": "admin_withdraw_community_pool",
+      "discriminator": [
+        30
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 30
-      }
+      "args": []
     },
     {
-      "name": "AdminWithdrawEngineSol",
+      "name": "admin_withdraw_engine_sol",
+      "discriminator": [
+        31
+      ],
       "accounts": [],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 31
-      }
+      "args": []
     },
     {
-      "name": "CreateDailyJackpot",
+      "name": "create_daily_jackpot",
+      "discriminator": [
+        32
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Admin (rent payer)"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "jackpot",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Daily jackpot PDA"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 32
-      }
+      "args": []
     },
     {
-      "name": "SweepToJackpot",
+      "name": "sweep_to_jackpot",
+      "discriminator": [
+        33
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "jackpot",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Daily jackpot PDA"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 33
-      }
+      "args": []
     },
     {
-      "name": "MigrateConfig",
+      "name": "migrate_config",
+      "discriminator": [
+        34
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin (ADMIN2/3/4)"
           ]
         },
         {
           "name": "config",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 34
-      }
+      "args": []
     },
     {
-      "name": "RequestJackpotDraw",
+      "name": "request_jackpot_draw",
+      "discriminator": [
+        35
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": true,
-          "isSigner": true,
+          "writable": true,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
           "name": "config",
-          "isMut": false,
-          "isSigner": false,
+          "writable": false,
+          "signer": false,
           "docs": [
             "Control config PDA"
           ]
         },
         {
           "name": "jackpot",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "Source jackpot PDA — pays all fees"
           ]
         },
         {
           "name": "draw",
-          "isMut": true,
-          "isSigner": false,
+          "writable": true,
+          "signer": false,
           "docs": [
             "JackpotDraw PDA, allocated here"
           ]
         },
         {
-          "name": "oraoRequest",
-          "isMut": true,
-          "isSigner": false,
+          "name": "orao_request",
+          "writable": true,
+          "signer": false,
           "docs": [
             "ORAO request PDA, created via CPI"
           ]
         },
         {
-          "name": "oraoNetworkState",
-          "isMut": true,
-          "isSigner": false,
+          "name": "orao_network_state",
+          "writable": true,
+          "signer": false,
           "docs": [
             "ORAO network state PDA"
           ]
         },
         {
-          "name": "oraoTreasury",
-          "isMut": true,
-          "isSigner": false,
+          "name": "orao_treasury",
+          "writable": true,
+          "signer": false,
           "docs": [
             "ORAO treasury (must match network_state.config.treasury)"
           ]
         },
         {
-          "name": "oraoProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "orao_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "ORAO VRF program (VRFzZoJdhFWL8rkvu87LpKM3RbcVezpMEc6X5GVDr7y)"
           ]
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false,
+          "name": "system_program",
+          "writable": false,
+          "signer": false,
           "docs": [
             "System program"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 35
-      }
+      "args": []
     },
     {
-      "name": "UpdateLpMinThreshold",
+      "name": "update_lp_min_threshold",
+      "discriminator": [
+        36
+      ],
       "accounts": [
         {
           "name": "admin",
-          "isMut": false,
-          "isSigner": true,
+          "writable": false,
+          "signer": true,
           "docs": [
             "Admin"
           ]
         },
         {
-          "name": "feeConfig",
-          "isMut": true,
-          "isSigner": false,
+          "name": "fee_config",
+          "writable": true,
+          "signer": false,
           "docs": [
             "Fee config PDA"
           ]
         }
       ],
-      "args": [],
-      "discriminant": {
-        "type": "u8",
-        "value": 36
-      }
+      "args": []
     }
   ],
   "metadata": {
+    "name": "print_control_v1",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Print Control V1 — bonding curve token launchpad",
     "origin": "shank",
     "address": "CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27"
-  }
+  },
+  "address": "CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27",
+  "events": [
+    {
+      "name": "TradeEvent",
+      "discriminator": [
+        189,
+        219,
+        127,
+        211,
+        78,
+        230,
+        97,
+        238
+      ]
+    }
+  ],
+  "types": [
+    {
+      "name": "TradeEvent",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "solAmount",
+            "type": "u64"
+          },
+          {
+            "name": "tokenAmount",
+            "type": "u64"
+          },
+          {
+            "name": "isBuy",
+            "type": "bool"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "virtualSolReserves",
+            "type": "u64"
+          },
+          {
+            "name": "virtualTokenReserves",
+            "type": "u64"
+          },
+          {
+            "name": "realSolReserves",
+            "type": "u64"
+          },
+          {
+            "name": "realTokenReserves",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "creatorFee",
+            "type": "u64"
+          },
+          {
+            "name": "solToUser",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
 }

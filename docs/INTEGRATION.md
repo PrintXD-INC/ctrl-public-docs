@@ -87,6 +87,9 @@ The program's trading state is keyed by the token `mint`. Once you know the mint
 | `creatorFeeVault` | `[b"creator-fees", mint, creator]` | Control |
 | `lpEscrow` | `[b"lp-escrow", mint]` | Control |
 | `communityPool` | `[b"community-pool", mint]` | Control |
+| `eventAuthority` | `[b"__event_authority"]` | Control |
+
+> `eventAuthority` is global to the program (not per-mint) and is required on every `Buy` and `Sell` for the self-CPI `TradeEvent` emission. The bump is precomputed (`255`) and hardcoded in the program — derive it once and cache it.
 
 > **Token-2022 ATAs.** Pass the Token-2022 program ID, not the legacy SPL Token program. The `vaultAta` uses `allowOwnerOffCurve = true` because `curve` is a PDA, not a keypair.
 
@@ -146,6 +149,16 @@ export function deriveCommunityPool(mint: PublicKey): PublicKey {
   return pda;
 }
 
+// Anchor self-CPI signer for TradeEvent emission. Global, not per-mint.
+// Required on every Buy and Sell.
+export function deriveEventAuthority(): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('__event_authority')],
+    CONTROL_PROGRAM_ID,
+  );
+  return pda;
+}
+
 export function deriveVaultAta(mint: PublicKey): PublicKey {
   const curve = deriveCurve(mint);
   return getAssociatedTokenAddressSync(
@@ -163,7 +176,9 @@ export function deriveVaultAta(mint: PublicKey): PublicKey {
 
 Swap SOL for tokens on the bonding curve.
 
-**Discriminant:** `0x02` · **Phase:** pre-graduation only
+**Discriminant:** `0x02` · **Phase:** pre-graduation only · **Accounts:** 14
+
+> **Breaking change — May 2026.** Every `Buy` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 12 and 13 — `eventAuthority` + `program`). Old callers that send 12 accounts will fail with `NotEnoughAccountKeys`. Live on Devnet now; the same upgrade is rolling out to Mainnet — once it lands, pre-upgrade callers there will fail too.
 
 ### Args (little-endian primitives, in order after the discriminant byte)
 
@@ -188,6 +203,8 @@ Swap SOL for tokens on the bonding curve.
 | 9 | `communityPool` | PDA, writable | Per-token community pool — seeds `[b"community-pool", mint]`. Receives both the base community fee (`config.community_fee_bps`) and the per-token addon (`curve.extra_community_fee_bps`). |
 | 10 | `token2022Program` | readonly | `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` |
 | 11 | `systemProgram` | readonly | `11111111111111111111111111111111` |
+| 12 | `eventAuthority` | PDA, readonly | Anchor self-CPI signer — seeds `[b"__event_authority"]`, bump `255` (precomputed). Required so the program can self-CPI back into itself with a `TradeEvent` log that Solscan / SolanaFM decode into a "Swap N for M SOL" UI. |
+| 13 | `program` | readonly | `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27` — the Control program account itself, required so the runtime can route the inner-CPI back into Control. |
 
 ### Instruction data layout
 
@@ -202,7 +219,9 @@ Swap SOL for tokens on the bonding curve.
 
 Swap tokens for SOL on the bonding curve.
 
-**Discriminant:** `0x03` · **Phase:** pre-graduation only
+**Discriminant:** `0x03` · **Phase:** pre-graduation only · **Accounts:** 13
+
+> **Breaking change — May 2026.** Every `Sell` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 11 and 12 — `eventAuthority` + `program`). Old callers that send 11 accounts will fail with `NotEnoughAccountKeys`. Live on Devnet now; rolling out to Mainnet shortly.
 
 ### Args (little-endian primitives, in order after the discriminant byte)
 
@@ -213,7 +232,7 @@ Swap tokens for SOL on the bonding curve.
 
 ### Accounts (in order)
 
-Sell takes **11 accounts** — the first 10 match [Buy](#buy) exactly, but `system_program` is *not* required (the program credits SOL by mutating PDA lamports directly). The `user` pays tokens and receives SOL; fee accounts still receive their slices (paid out of the proceeds).
+Sell takes **13 accounts** — the first 10 match [Buy](#buy)'s first 10 exactly. `system_program` is *not* required (the program credits SOL by mutating PDA lamports directly), so the self-CPI accounts sit at slots **11 and 12** here vs **12 and 13** in Buy, but otherwise carry the same values. The `user` pays tokens and receives SOL; fee accounts still receive their slices (paid out of the proceeds).
 
 | # | Name | Flags |
 |---|---|---|
@@ -228,6 +247,8 @@ Sell takes **11 accounts** — the first 10 match [Buy](#buy) exactly, but `syst
 | 8 | `lpEscrow` | PDA, writable |
 | 9 | `communityPool` | PDA, writable |
 | 10 | `token2022Program` | readonly |
+| 11 | `eventAuthority` | PDA, readonly |
+| 12 | `program` | readonly |
 
 ### Instruction data layout
 
@@ -340,6 +361,7 @@ import {
   deriveLpEscrow,
   deriveCommunityPool,
   deriveVaultAta,
+  deriveEventAuthority,
 } from './pdas';
 
 const BUY_DISCRIMINANT = 2;
@@ -378,6 +400,7 @@ export async function buildBuyTx(params: {
   const creatorFeeVault = deriveCreatorFeeVault(mint, creator);
   const lpEscrow = deriveLpEscrow(mint);
   const communityPool = deriveCommunityPool(mint);
+  const eventAuthority = deriveEventAuthority();
   const userAta = getAssociatedTokenAddressSync(
     mint,
     user,
@@ -394,7 +417,7 @@ export async function buildBuyTx(params: {
     TOKEN_2022_PROGRAM_ID,
   );
 
-  // 3. Build the Buy instruction.
+  // 3. Build the Buy instruction (14 accounts — last two are for self-CPI TradeEvent).
   const buyIx = new TransactionInstruction({
     programId: CONTROL_PROGRAM_ID,
     keys: [
@@ -410,6 +433,8 @@ export async function buildBuyTx(params: {
       { pubkey: communityPool,           isSigner: false, isWritable: true  },
       { pubkey: TOKEN_2022_PROGRAM_ID,   isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: eventAuthority,          isSigner: false, isWritable: false },
+      { pubkey: CONTROL_PROGRAM_ID,      isSigner: false, isWritable: false },
     ],
     data: encodeBuyData(solAmountLamports, minTokensOut),
   });
@@ -443,7 +468,7 @@ async function example() {
 
 ### 2. Build a Sell transaction
 
-Sell is symmetric to Buy. Discriminant flips to `0x03`, `sol_amount`/`min_tokens_out` become `token_amount`/`min_sol_out`, and the account list is the same 11 accounts (Buy's list minus `system_program`). The user's ATA must already exist and hold the tokens being sold.
+Sell is symmetric to Buy. Discriminant flips to `0x03`, `sol_amount`/`min_tokens_out` become `token_amount`/`min_sol_out`, and the account list is **13 accounts**: Buy's first 10 + `token2022Program` + `eventAuthority` + `program`. `system_program` is *not* required, so the self-CPI accounts sit at slots **11 and 12** instead of **12 and 13** as in Buy. The user's ATA must already exist and hold the tokens being sold.
 
 ```ts
 import {
@@ -464,6 +489,7 @@ import {
   deriveLpEscrow,
   deriveCommunityPool,
   deriveVaultAta,
+  deriveEventAuthority,
 } from './pdas';
 
 const SELL_DISCRIMINANT = 3;
@@ -502,6 +528,7 @@ export async function buildSellTx(params: {
   const creatorFeeVault = deriveCreatorFeeVault(mint, creator);
   const lpEscrow = deriveLpEscrow(mint);
   const communityPool = deriveCommunityPool(mint);
+  const eventAuthority = deriveEventAuthority();
   const userAta = getAssociatedTokenAddressSync(
     mint,
     user,
@@ -509,7 +536,7 @@ export async function buildSellTx(params: {
     TOKEN_2022_PROGRAM_ID,
   );
 
-  // 2. Build the Sell instruction (11 accounts — same as Buy minus system_program).
+  // 2. Build the Sell instruction (13 accounts — last two are for self-CPI TradeEvent).
   const sellIx = new TransactionInstruction({
     programId: CONTROL_PROGRAM_ID,
     keys: [
@@ -524,6 +551,8 @@ export async function buildSellTx(params: {
       { pubkey: lpEscrow,              isSigner: false, isWritable: true  },
       { pubkey: communityPool,         isSigner: false, isWritable: true  },
       { pubkey: TOKEN_2022_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: eventAuthority,        isSigner: false, isWritable: false },
+      { pubkey: CONTROL_PROGRAM_ID,    isSigner: false, isWritable: false },
     ],
     data: encodeSellData(tokenAmount, minSolOut),
   });
@@ -604,60 +633,106 @@ export function quoteSell(state: CurveState, tokenIn: bigint): bigint {
 
 > **Per-token fees.** The `extra_community_fee_bps` field (offset `240`, `u16 LE`) on the curve adds to the base community fee. Configurable per mint at creation; clamp the total trading fee at quote time if you want exact lamport accounting. The 3% constant above covers the default config — read `extra_community_fee_bps` when the integrator needs precise per-mint slippage.
 
-### 4. Confirm trade results from a transaction
+### 4. Decode the on-chain TradeEvent
 
-The on-chain program emits a plain `"Buy successful"` / `"Sell successful"` log, not a structured event. To know exactly how many tokens or lamports a trade delivered, diff the user's pre/post token and SOL balances from the transaction `meta` after confirmation.
+Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruction on the program. The event payload is a 153-byte buffer: 8-byte Anchor self-CPI prefix + 8-byte `TradeEvent` discriminator + 12 fields. Reading it gives you the exact swap result (`solAmount`, `tokenAmount`, fees, post-trade reserves) without touching balance deltas.
+
+```text
+0..8     ANCHOR_LOG_DISC      sha256("anchor:event")[..8]   = [228, 69,165, 46, 81,203,154, 29]
+8..16    TRADE_EVENT_DISC     sha256("event:TradeEvent")[..8] = [189,219,127,211, 78,230, 97,238]
+16..48   mint                 pubkey (32)
+48..56   solAmount            u64 LE (lamports moved into / out of the curve)
+56..64   tokenAmount          u64 LE (raw base units moved)
+64..65   isBuy                u8     (1 = Buy, 0 = Sell)
+65..97   user                 pubkey (32)
+97..105  virtualSolReserves   u64 LE (post-trade)
+105..113 virtualTokenReserves u64 LE (post-trade)
+113..121 realSolReserves      u64 LE (post-trade)
+121..129 realTokenReserves    u64 LE (post-trade)
+129..137 fee                  u64 LE (total fee taken from the trade)
+137..145 creatorFee           u64 LE (creator's slice of `fee`)
+145..153 solToUser            u64 LE (Sell only — net SOL credited to the seller)
+```
 
 ```ts
 import { Connection, PublicKey } from '@solana/web3.js';
+import bs58 from 'bs58';
+import { CONTROL_PROGRAM_ID } from './pdas';
 
-export interface TradeOutcome {
-  signature: string;
-  tokenDelta: bigint;   // + on Buy, − on Sell (raw base units)
-  solDelta: bigint;     // + on Sell, − on Buy (lamports, includes tx fee)
+// sha256("anchor:event")[..8] — every Anchor self-CPI log starts with this.
+const ANCHOR_LOG_DISC = Buffer.from([228, 69, 165, 46, 81, 203, 154, 29]);
+// sha256("event:TradeEvent")[..8] — TradeEvent's per-event discriminator.
+const TRADE_EVENT_DISC = Buffer.from([189, 219, 127, 211, 78, 230, 97, 238]);
+const TRADE_EVENT_LEN = 153;
+
+export interface TradeEvent {
+  mint: PublicKey;
+  user: PublicKey;
+  isBuy: boolean;
+  solAmount: bigint;
+  tokenAmount: bigint;
+  fee: bigint;
+  creatorFee: bigint;
+  solToUser: bigint;
+  virtualSolReserves: bigint;
+  virtualTokenReserves: bigint;
+  realSolReserves: bigint;
+  realTokenReserves: bigint;
 }
 
-export async function parseTradeOutcome(
+function decodeTradeEvent(buf: Buffer): TradeEvent {
+  if (buf.length !== TRADE_EVENT_LEN) throw new Error(`bad event length: ${buf.length}`);
+  if (!buf.slice(0, 8).equals(ANCHOR_LOG_DISC))   throw new Error('not an anchor self-CPI log');
+  if (!buf.slice(8, 16).equals(TRADE_EVENT_DISC)) throw new Error('not a TradeEvent');
+
+  return {
+    mint:                 new PublicKey(buf.slice(16, 48)),
+    solAmount:            buf.readBigUInt64LE(48),
+    tokenAmount:          buf.readBigUInt64LE(56),
+    isBuy:                buf[64] === 1,
+    user:                 new PublicKey(buf.slice(65, 97)),
+    virtualSolReserves:   buf.readBigUInt64LE(97),
+    virtualTokenReserves: buf.readBigUInt64LE(105),
+    realSolReserves:      buf.readBigUInt64LE(113),
+    realTokenReserves:    buf.readBigUInt64LE(121),
+    fee:                  buf.readBigUInt64LE(129),
+    creatorFee:           buf.readBigUInt64LE(137),
+    solToUser:            buf.readBigUInt64LE(145),
+  };
+}
+
+// Walk the inner instructions emitted by the Control program and return
+// every TradeEvent. Most txs have exactly one; batched ones may have more.
+export async function parseTradeEvents(
   connection: Connection,
   signature: string,
-  user: PublicKey,
-  mint: PublicKey,
-): Promise<TradeOutcome> {
+): Promise<TradeEvent[]> {
   const tx = await connection.getTransaction(signature, {
     commitment: 'confirmed',
     maxSupportedTransactionVersion: 0,
   });
   if (!tx || !tx.meta) throw new Error('Transaction not found or missing meta');
-  if (tx.meta.err)     throw new Error(`Transaction failed: ${JSON.stringify(tx.meta.err)}`);
+  if (tx.meta.err)    throw new Error(`Transaction failed: ${JSON.stringify(tx.meta.err)}`);
 
-  // SOL delta from the user's account index 0 (fee payer is the user).
-  const userKey = user.toBase58();
   const staticKeys = tx.transaction.message.getAccountKeys().staticAccountKeys;
-  const userIdx = staticKeys.findIndex((k) => k.toBase58() === userKey);
-  if (userIdx < 0) throw new Error('User pubkey not in transaction accounts');
+  const programIdx = staticKeys.findIndex((k) => k.equals(CONTROL_PROGRAM_ID));
+  if (programIdx < 0) return [];
 
-  const solDelta =
-    BigInt(tx.meta.postBalances[userIdx]) - BigInt(tx.meta.preBalances[userIdx]);
-
-  // Token delta from the user's pre/post token balance for this mint.
-  const mintKey = mint.toBase58();
-  const findUserBalance = (rows: typeof tx.meta.preTokenBalances) =>
-    rows?.find((b) => b.owner === userKey && b.mint === mintKey);
-
-  const pre  = findUserBalance(tx.meta.preTokenBalances);
-  const post = findUserBalance(tx.meta.postTokenBalances);
-  const preAmt  = pre  ? BigInt(pre.uiTokenAmount.amount)  : 0n;
-  const postAmt = post ? BigInt(post.uiTokenAmount.amount) : 0n;
-
-  return {
-    signature,
-    tokenDelta: postAmt - preAmt,
-    solDelta,
-  };
+  const events: TradeEvent[] = [];
+  for (const innerSet of tx.meta.innerInstructions ?? []) {
+    for (const ix of innerSet.instructions) {
+      if (ix.programIdIndex !== programIdx) continue;
+      const data = Buffer.from(bs58.decode(ix.data));
+      if (data.length !== TRADE_EVENT_LEN) continue;
+      if (!data.slice(0, 8).equals(ANCHOR_LOG_DISC)) continue;
+      events.push(decodeTradeEvent(data));
+    }
+  }
+  return events;
 }
 ```
 
-> **Slippage check.** Compare the realized `tokenDelta` (Buy) or `solDelta` (Sell) against the quote you computed pre-trade. The on-chain program already enforces `min_tokens_out` / `min_sol_out` — this parser is for accounting and UX confirmation, not safety.
+> **Why this matters.** Solscan and SolanaFM render trade activity from this same event (same Anchor self-CPI convention as Anchor programs), which is why your txs show "Action: Swap N for M SOL" out of the box. Indexers can key on the program ID + the 16-byte prefix (`ANCHOR_LOG_DISC` + `TRADE_EVENT_DISC`) to detect every Buy/Sell across all Control mints with no per-mint subscription.
 
 ---
 

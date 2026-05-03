@@ -59,7 +59,7 @@ Account orders, instruction names, and discriminants are authoritative in both c
 
 ## Does the program emit structured trade events?
 
-No. It logs plain `"Buy successful"` / `"Sell successful"` strings. To get exact deltas after a trade lands, diff the user's pre/post token and SOL balances from the transaction `meta` — see [`parseTradeOutcome`](./INTEGRATION.md#4-confirm-trade-results-from-a-transaction).
+**Yes — as of May 2026.** Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruction. The 153-byte payload carries `mint`, `user`, `solAmount`, `tokenAmount`, fees, post-trade reserves, and (for Sell) `solToUser`. Walk `tx.meta.innerInstructions` and decode any 153-byte buffer whose first 8 bytes match the Anchor self-CPI prefix — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent). Live on Devnet, rolling out to Mainnet shortly.
 
 ## Does Control provide a hosted REST API or SDK?
 

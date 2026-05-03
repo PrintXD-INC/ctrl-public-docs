@@ -19,19 +19,15 @@ These are real, successful transactions for each instruction Control exposes tod
 
 | Instruction | Discriminant | Signature |
 |---|---|---|
-| Create | `0x09` | [`3oHKPanxoP…1KWnQa2c`](https://solscan.io/tx/3oHKPanxoPohptipTB2DEBKwRRAiAwdn1whhSdNoc9ZywAAvmeGBo5FEB2tVDMXmAZsr88FhpjXvtGGA1KWnQa2c?cluster=devnet) |
-| Buy | `0x02` | [`2ed1XR61MY…67VwMmbh`](https://solscan.io/tx/2ed1XR61MY9NMD3YUCHvFe7br1bkcgNamRmumYVtZqW917NsgijfZpzAhEKGzmiAvWp5jCLf4n3rVVGW67VwMmbh?cluster=devnet) |
-| Sell | `0x03` | [`2wavMJs6R1…9DJUzHP`](https://solscan.io/tx/2wavMJs6R16XHoSuPbDoEP2xfvLvrTZEKN152bT9QJgQHVjRSgeCZSd95jscj9tpuYe1go4AiBVV8QBe9DJUzHP?cluster=devnet) |
+| Create | `0x09` | [`gr4wLuLv7R…5gUVdoU`](https://solscan.io/tx/gr4wLuLv7R5mmy4NZnW6fQXvu43RSfNUYfrH8tjV5CEAK2VP9u6aw5ZF3G4E3FkvNzSsyeGrxotVZdtX5gUVdoU?cluster=devnet) |
+| Buy | `0x02` | [`5DBWkW9L8m…FbvHNCW2`](https://solscan.io/tx/5DBWkW9L8mfS2AajeKcmhL2aTy5jBnYLYrNzxowrVPA1dTQFyWhjTDRd3ezeG8WuSwtd3e6E2wM9F1ZVFbvHNCW2?cluster=devnet) |
+| Sell | `0x03` | [`2fnFi1iPSS…4KUL7MdE`](https://solscan.io/tx/2fnFi1iPSSQLu7zGCqyvvB3yKUyXcmFh2cePfCjeoUrJrLGofSDSRHgTawXNvryBzcU56BE1MvdoJFSq4KUL7MdE?cluster=devnet) |
 
 ### Mainnet
 
-| Instruction | Discriminant | Signature |
-|---|---|---|
-| Create | `0x09` | [`5n3LuV6BMz…MM8DZ3oo`](https://solscan.io/tx/5n3LuV6BMzxa3ea7Gokm6cRaTwK8iH5jrmPH3stCYGvSrBZs4mvmUi7cZ8rxpzM16AgWGgLTvnGjDqseMM8DZ3oo) |
-| Buy | `0x02` | [`5H5QqqYaqc…Tn9bDXW6`](https://solscan.io/tx/5H5QqqYaqcNks9oZQvAysNVX75SLUA78iPsquaUV8gLf7g5YCfowGWjw3KmXBYyH4FmZaUWgzEdBmPfgTn9bDXW6) |
-| Sell | `0x03` | [`5Yo5JVA5dS…tdno43tv`](https://solscan.io/tx/5Yo5JVA5dSp8cFdvW2u2ouHo7wVcqPQHfbCuDcR3h5KXExmmUzY4ijBHCYLf1JRCveR5rYRZv4n591VQtdno43tv) |
+> **Pending — refresh after May 2026 upgrade.** The same self-CPI `TradeEvent` upgrade that already landed on Devnet (and changed Buy/Sell to **14 / 13 accounts**) is rolling out to Mainnet shortly. Old Mainnet sample signatures would be misleading for any new integrator — they use the **pre-upgrade 12 / 11-account layout** that Mainnet itself will move off of. Fresh Mainnet rows will be added to this table the moment the deploy lands; until then, build against the Devnet samples above.
 
-> **Snapshot, not a frozen contract.** These signatures are a current snapshot. The program author is rolling out a change to include full CPI data logs in every transaction, so future Sell txs will surface the SOL swap value via inner-instruction logs (today you read it from the SOL balance delta — see [`parseTradeOutcome`](./INTEGRATION.md#4-confirm-trade-results-from-a-transaction)). When that lands the table will be refreshed; treat current entries as ground truth for the **account layout and discriminant byte**, and re-pull a fresh tx after the upgrade for any **log-based parsing**.
+> **Current as of May 2026, live on Devnet, pending Mainnet.** Every Buy/Sell now emits an Anchor self-CPI `TradeEvent` on the inner instructions, and the new Devnet signatures above all carry the event log + use the new **14-account Buy / 13-account Sell** layout. To decode the event payload (exact `solAmount`, `tokenAmount`, fees, post-trade reserves) walk `tx.meta.innerInstructions` — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent) in the Integration Guide. Treat the entries above as ground truth for the **post-upgrade account layout, discriminant byte, and event log shape**.
 
 ---
 
@@ -75,7 +71,7 @@ Pulled directly from [`idl/control.json`](../idl/control.json) (instruction inde
 | Account 4 | Curve PDA — start watching for trades from here |
 | Instruction data | Token-2022 metadata args (name, symbol, URI) |
 
-Refer to a Solscan-decoded sample tx (Devnet or Mainnet Create signatures above) for the current byte layout of the metadata args, and re-pull after the CPI-logs upgrade for a structured representation.
+Refer to a Solscan-decoded sample tx (Devnet Create signature above) for the current byte layout of the metadata args. A Mainnet sample will be added once the May 2026 self-CPI upgrade lands.
 
 ### Detecting new tokens in real time
 
