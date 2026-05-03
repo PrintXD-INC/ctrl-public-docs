@@ -30,6 +30,7 @@ The Control program ships 37 instructions in total. Everything else (token creat
 ## Documentation
 
 - [**Integration Guide**](./docs/INTEGRATION.md) — full Buy/Sell reference: PDAs, instruction layouts, bonding-curve math, fee structure, graduation handling, TypeScript examples.
+- [**Reference Transactions**](./docs/REFERENCE_TRANSACTIONS.md) — real on-chain Create/Buy/Sell signatures (Devnet + Mainnet), and the parse-only account layout for `CreateToken`.
 - [**FAQ**](./docs/FAQ.md) — short answers on graduation, slippage, networks, and where to find the IDL.
 
 ## IDL
