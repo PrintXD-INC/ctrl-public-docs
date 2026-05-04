@@ -14,16 +14,16 @@ This repository documents how to integrate **Buy** and **Sell** with the Control
 | Networks | Mainnet **and** Devnet — same program ID on both |
 | Framework | Pinocchio (raw BPF — not Anchor) |
 | Token standard | Token-2022 (`TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`) |
-| Instruction discriminant | Single `u8` byte (no Anchor 8-byte hashed disc) |
+| Instruction discriminator | **Dual-mode**: legacy `u8` (1 byte) **or** 8-byte Anchor-style `sha256("global:<name>")[..8]` |
 
 ## Scope of v1
 
 This first release documents only the two instructions an external integrator needs to call:
 
-- **Buy** — discriminant `0x02`, swap SOL → token on the bonding curve
-- **Sell** — discriminant `0x03`, swap token → SOL on the bonding curve
+- **Buy** — discriminator `0x02` (legacy) or `[102, 6, 61, 18, 1, 218, 235, 234]` (Anchor), swap SOL → token on the bonding curve
+- **Sell** — discriminator `0x03` (legacy) or `[51, 230, 133, 164, 1, 127, 131, 173]` (Anchor), swap token → SOL on the bonding curve
 
-The Control program ships 37 instructions in total. Everything else (token creation, admin, migration, post-migration distribution, buyback engine, daily jackpot) is internal and **integrators do not need to call it**. The full set is enumerated in the on-chain Shank IDL at [`idl/control.json`](./idl/control.json).
+The Control program ships **40 instructions** in total. Everything else (token creation, admin, migration, post-migration distribution, buyback engine, daily jackpot, IDL upload) is internal and **integrators do not need to call it**. The full set is enumerated in the on-chain IDL at [`idl/control.json`](./idl/control.json).
 
 > **Graduation safety.** Once a curve fills its `required_liquidity` threshold, Control automatically migrates the token to a Meteora DAMM v2 pool, the curve account is closed, and further `Buy`/`Sell` calls revert. Detect graduation client-side (`curve.is_completed === 1` or curve account missing) and re-route to Meteora DAMM v2 from that point on. See [Graduation](./docs/INTEGRATION.md#graduation).
 
@@ -35,10 +35,10 @@ The Control program ships 37 instructions in total. Everything else (token creat
 
 ## IDL
 
-- [`idl/control.json`](./idl/control.json) — canonical Shank IDL, copied from the on-chain program. 37 instructions, account orders, and discriminants.
+- [`idl/control.json`](./idl/control.json) — canonical IDL, copied from the on-chain program. 40 instructions, 1 event (`TradeEvent`), 8-byte Anchor-style discriminators alongside the legacy 1-byte form. Account orders, instruction names, and event/type layouts are authoritative.
 - Live copy on Solana Explorer: <https://explorer.solana.com/address/CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27/idl>
 
-> Pinocchio parses instruction data manually with `bytemuck` (not Borsh), so Shank cannot introspect arg layouts and the `args` blocks in the IDL are intentionally empty. The wire format for `Buy` and `Sell` is in [Integration Guide → Buy](./docs/INTEGRATION.md#buy) and [→ Sell](./docs/INTEGRATION.md#sell).
+> Pinocchio parses instruction data manually with `bytemuck` (not Borsh), so the `args` blocks in the IDL are intentionally empty — only `events` and `types` are populated for parsing. The wire format for `Buy` and `Sell` is in [Integration Guide → Buy](./docs/INTEGRATION.md#buy) and [→ Sell](./docs/INTEGRATION.md#sell).
 
 ## Contact
 

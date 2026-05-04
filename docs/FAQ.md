@@ -40,9 +40,9 @@ Compute the floor from a fresh quote ([`readCurveState`](./INTEGRATION.md#3-read
 
 ## Why is the IDL `args` block empty for every instruction?
 
-Control is built on **Pinocchio**, which parses instruction data manually with `bytemuck`. There is no derive macro, so Shank cannot introspect arg layouts. This is a permanent design decision, not a pending update.
+Control runs on **Pinocchio**, which parses instruction data manually with `bytemuck`. There is no derive macro, so the IDL generator cannot introspect arg layouts — only the `events` and `types` blocks are populated for parsing. This is a permanent design decision, not a pending update.
 
-The wire format for `Buy` (`0x02`) and `Sell` (`0x03`) is documented in the [Integration Guide](./INTEGRATION.md#buy). You don't need any other instructions to integrate.
+The wire format for `Buy` and `Sell` (both 1-byte and 8-byte discriminator forms, plus the args layout) is documented in the [Integration Guide](./INTEGRATION.md#buy). You don't need any other instructions to integrate.
 
 ## Where do I find the canonical IDL?
 
@@ -51,15 +51,15 @@ Two equivalent sources:
 - This repo: [`idl/control.json`](../idl/control.json).
 - Live, on-chain: <https://explorer.solana.com/address/CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27/idl>.
 
-Account orders, instruction names, and discriminants are authoritative in both copies. The repo file mirrors the on-chain Shank IDL.
+Account orders, instruction names, 8-byte Anchor-style discriminators, and the `TradeEvent` layout are authoritative in both copies.
 
 ## Anchor or Pinocchio?
 
-**Pinocchio.** Instruction data is `[u8 discriminant] [little-endian primitive args...]` — no 8-byte hashed Anchor discriminant, no Borsh framing. See [Program](./INTEGRATION.md#program).
+**Pinocchio runtime, dual-mode dispatcher.** The on-chain program is built on Pinocchio (no Anchor framework, no Borsh framing — args are little-endian primitives parsed via `bytemuck`). However, the dispatcher accepts **both** discriminator forms: the legacy 1-byte enum disc (`0x02` for Buy, `0x03` for Sell) **and** the 8-byte Anchor-style disc (`sha256("global:<name>")[..8]`). Old 1-byte clients keep working forever; new clients can use the 8-byte form to get IDL-driven decode in Anchor SDKs and proper rendering on Solscan / SolanaFM. See [Program](./INTEGRATION.md#program).
 
 ## Does the program emit structured trade events?
 
-**Yes — as of May 2026.** Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruction. The 153-byte payload carries `mint`, `user`, `solAmount`, `tokenAmount`, fees, post-trade reserves, and (for Sell) `solToUser`. Walk `tx.meta.innerInstructions` and decode any 153-byte buffer whose first 8 bytes match the Anchor self-CPI prefix — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent). Live on Devnet, rolling out to Mainnet shortly.
+**Yes — as of May 2026, live on both Mainnet and Devnet.** Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruction. The 153-byte payload carries `mint`, `user`, `solAmount`, `tokenAmount`, fees, post-trade reserves, and (for Sell) `solToUser`. Walk `tx.meta.innerInstructions` and decode any 153-byte buffer whose first 8 bytes match the Anchor self-CPI prefix — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent).
 
 ## Does Control provide a hosted REST API or SDK?
 

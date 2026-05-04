@@ -13,21 +13,21 @@ For the Buy/Sell wire format and TypeScript examples, see the [Integration Guide
 
 ## Reference signatures
 
-These are real, successful transactions for each instruction Control exposes today. They are produced by the program author for reference — use them to verify your decoder's account ordering and discriminant byte against ground-truth on-chain data.
+These are real, successful transactions for each instruction Control exposes today. They are produced by the program author for reference — use them to verify your decoder's account ordering, discriminator, and inner-instruction TradeEvent shape against ground-truth on-chain data.
 
 ### Devnet
 
-| Instruction | Discriminant | Signature |
+| Instruction | Discriminator | Signature |
 |---|---|---|
-| Create | `0x09` | [`gr4wLuLv7R…5gUVdoU`](https://solscan.io/tx/gr4wLuLv7R5mmy4NZnW6fQXvu43RSfNUYfrH8tjV5CEAK2VP9u6aw5ZF3G4E3FkvNzSsyeGrxotVZdtX5gUVdoU?cluster=devnet) |
-| Buy | `0x02` | [`5DBWkW9L8m…FbvHNCW2`](https://solscan.io/tx/5DBWkW9L8mfS2AajeKcmhL2aTy5jBnYLYrNzxowrVPA1dTQFyWhjTDRd3ezeG8WuSwtd3e6E2wM9F1ZVFbvHNCW2?cluster=devnet) |
-| Sell | `0x03` | [`2fnFi1iPSS…4KUL7MdE`](https://solscan.io/tx/2fnFi1iPSSQLu7zGCqyvvB3yKUyXcmFh2cePfCjeoUrJrLGofSDSRHgTawXNvryBzcU56BE1MvdoJFSq4KUL7MdE?cluster=devnet) |
+| Create | `0x09` (legacy) / `[84, 52, 204, 228, 24, 140, 234, 75]` (Anchor) | [`qNUbbvq2vf…hZh6pDfJ`](https://solscan.io/tx/qNUbbvq2vfJBPieUKztMWcJ31kgJPZiD9iHSBmpGLBPcPnxyEdPYMKh6TU3127i1x1CLSZgZPDPB3FQhZh6pDfJ?cluster=devnet) |
+| Buy | `0x02` (legacy) / `[102, 6, 61, 18, 1, 218, 235, 234]` (Anchor) | [`2XMdkUgaaY…ZGjkJNiaGStv`](https://solscan.io/tx/2XMdkUgaaY9mbTT4jKefZLFTP3bUfCqSEUU9kPHKoDzwa6zx9k9GRregdALKCdge6aw2Qexh2q72ZGjkJNiaGStv?cluster=devnet) |
+| Sell | `0x03` (legacy) / `[51, 230, 133, 164, 1, 127, 131, 173]` (Anchor) | [`5Bn3Wijq8R…CJTbvr7cE`](https://solscan.io/tx/5Bn3Wijq8RRqfNYjfSFSEVb1BqP9eWQouNZJRS547WVzatiFQw5hhgphvvkrbeAqP64itLLFeBCjWFcCJTbvr7cE?cluster=devnet) |
 
 ### Mainnet
 
-> **Pending — refresh after May 2026 upgrade.** The same self-CPI `TradeEvent` upgrade that already landed on Devnet (and changed Buy/Sell to **14 / 13 accounts**) is rolling out to Mainnet shortly. Old Mainnet sample signatures would be misleading for any new integrator — they use the **pre-upgrade 12 / 11-account layout** that Mainnet itself will move off of. Fresh Mainnet rows will be added to this table the moment the deploy lands; until then, build against the Devnet samples above.
+> **Sample signatures pending — program upgrade is already live.** The May 2026 self-CPI `TradeEvent` upgrade and the dual-mode discriminator dispatch are deployed on **Mainnet now**, at the same Program ID `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27`, with the same **14-account Buy / 13-account Sell** layout and the same on-chain behavior as Devnet. Only the reference Create / Buy / Sell sample transactions on Mainnet are still being produced — they will be added here once available. Until then, the Devnet samples above are a faithful preview of what Mainnet txs look like (same wire format, same accounts, same event log).
 
-> **Current as of May 2026, live on Devnet, pending Mainnet.** Every Buy/Sell now emits an Anchor self-CPI `TradeEvent` on the inner instructions, and the new Devnet signatures above all carry the event log + use the new **14-account Buy / 13-account Sell** layout. To decode the event payload (exact `solAmount`, `tokenAmount`, fees, post-trade reserves) walk `tx.meta.innerInstructions` — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent) in the Integration Guide. Treat the entries above as ground truth for the **post-upgrade account layout, discriminant byte, and event log shape**.
+> **Current as of May 2026 — live on Mainnet and Devnet.** Every Buy and Sell emits an Anchor self-CPI `TradeEvent` on the inner instructions, and the dispatcher accepts both the legacy 1-byte disc and the 8-byte Anchor-style disc. The new Devnet signatures above were produced with the 8-byte form and carry the event log under the new **14-account Buy / 13-account Sell** layout. To decode the event payload (exact `solAmount`, `tokenAmount`, fees, post-trade reserves) walk `tx.meta.innerInstructions` — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent) in the Integration Guide. Treat the entries above as ground truth for the **account layout, both discriminator forms, and event log shape**.
 
 ---
 
@@ -39,9 +39,14 @@ These are real, successful transactions for each instruction Control exposes tod
 
 To detect new launches in real time. Each Create tx introduces a brand-new bonding curve to the platform, and downstream systems (aggregators, trading bots, portfolio trackers) want to start quoting and trading the moment it lands.
 
-### Discriminant
+### Discriminator
 
-`CreateToken` uses the single byte `0x09` (decimal `9`) as the leading byte of instruction data, consistent with the rest of the program. See [Pinocchio, not Anchor](./INTEGRATION.md#program) for why.
+`CreateToken` is dispatched by either form:
+
+- **Legacy 1-byte:** `0x09` (decimal `9`) as the leading byte of instruction data.
+- **Anchor-style 8-byte:** `[84, 52, 204, 228, 24, 140, 234, 75]` (= `sha256("global:create_token")[..8]`).
+
+Both route to the same on-chain handler. See [Pinocchio runtime, dual-mode dispatch](./INTEGRATION.md#program) for the dispatcher contract.
 
 ### Account layout
 
@@ -71,16 +76,19 @@ Pulled directly from [`idl/control.json`](../idl/control.json) (instruction inde
 | Account 4 | Curve PDA — start watching for trades from here |
 | Instruction data | Token-2022 metadata args (name, symbol, URI) |
 
-Refer to a Solscan-decoded sample tx (Devnet Create signature above) for the current byte layout of the metadata args. A Mainnet sample will be added once the May 2026 self-CPI upgrade lands.
+Refer to a Solscan-decoded sample tx (Devnet Create signature above) for the current byte layout of the metadata args. A Mainnet Create sample will be added here when produced — the on-chain program already runs the same upgrade as Devnet, only the reference signature is pending.
 
 ### Detecting new tokens in real time
 
-Subscribe to logs or transactions on the Control program ID and filter by the leading instruction-data byte:
+Subscribe to logs or transactions on the Control program ID and filter on either discriminator form:
 
 ```
 Program ID:                CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27
-Match condition:           instruction_data[0] == 0x09
+Match condition (legacy):  instruction_data[0] == 0x09
+Match condition (Anchor):  instruction_data[0..8] == [84, 52, 204, 228, 24, 140, 234, 75]
 ```
+
+Either filter is sufficient on its own — the dispatcher routes both forms to the same handler, so you do not need to match both. Pick the form your indexing pipeline already understands.
 
 Each match is a new mint launching on the platform. From there:
 

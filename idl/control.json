@@ -1,11 +1,23 @@
 {
-  "version": "0.1.0",
-  "name": "print_control_v1",
+  "address": "CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27",
+  "metadata": {
+    "name": "print_control_v1",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Print Control V1 — bonding curve token launchpad"
+  },
   "instructions": [
     {
       "name": "initialize_config",
       "discriminator": [
-        0
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
       ],
       "accounts": [
         {
@@ -33,12 +45,44 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "protocol_fee_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "creator_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "protocol_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "lp_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "community_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "create_fee",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "initialize_curve",
       "discriminator": [
-        1
+        170,
+        84,
+        186,
+        253,
+        131,
+        149,
+        95,
+        213
       ],
       "accounts": [
         {
@@ -90,12 +134,32 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "total_supply",
+          "type": "u64"
+        },
+        {
+          "name": "required_liquidity",
+          "type": "u64"
+        },
+        {
+          "name": "max_user_tokens",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "buy",
       "discriminator": [
-        2
+        102,
+        6,
+        61,
+        18,
+        1,
+        218,
+        235,
+        234
       ],
       "accounts": [
         {
@@ -108,8 +172,6 @@
         },
         {
           "name": "config",
-          "writable": false,
-          "signer": false,
           "docs": [
             "Control config PDA"
           ]
@@ -117,15 +179,12 @@
         {
           "name": "curve",
           "writable": true,
-          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "writable": false,
-          "signer": false,
           "docs": [
             "Token mint"
           ]
@@ -133,7 +192,6 @@
         {
           "name": "vault_ata",
           "writable": true,
-          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
@@ -141,7 +199,6 @@
         {
           "name": "user_ata",
           "writable": true,
-          "signer": false,
           "docs": [
             "User token account"
           ]
@@ -149,7 +206,6 @@
         {
           "name": "creator_fee_vault",
           "writable": true,
-          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
@@ -157,7 +213,6 @@
         {
           "name": "protocol_fee_wallet",
           "writable": true,
-          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
@@ -165,7 +220,6 @@
         {
           "name": "lp_escrow",
           "writable": true,
-          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
@@ -173,34 +227,57 @@
         {
           "name": "community_pool",
           "writable": true,
-          "signer": false,
           "docs": [
             "Per-token community pool PDA [\"community-pool\", mint]"
           ]
         },
         {
-          "name": "token2022_program",
-          "writable": false,
-          "signer": false,
+          "name": "token_2022_program",
           "docs": [
             "Token-2022 program"
           ]
         },
         {
           "name": "system_program",
-          "writable": false,
-          "signer": false,
           "docs": [
             "System program"
           ]
+        },
+        {
+          "name": "event_authority",
+          "docs": [
+            "TradeEvent authority PDA [\"__event_authority\"]"
+          ]
+        },
+        {
+          "name": "program",
+          "docs": [
+            "This program — required for the TradeEvent self-CPI"
+          ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "sol_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_tokens_out",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "sell",
       "discriminator": [
-        3
+        51,
+        230,
+        133,
+        164,
+        1,
+        127,
+        131,
+        173
       ],
       "accounts": [
         {
@@ -213,8 +290,6 @@
         },
         {
           "name": "config",
-          "writable": false,
-          "signer": false,
           "docs": [
             "Control config PDA"
           ]
@@ -222,15 +297,12 @@
         {
           "name": "curve",
           "writable": true,
-          "signer": false,
           "docs": [
             "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "writable": false,
-          "signer": false,
           "docs": [
             "Token mint"
           ]
@@ -238,7 +310,6 @@
         {
           "name": "vault_ata",
           "writable": true,
-          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
@@ -246,7 +317,6 @@
         {
           "name": "user_ata",
           "writable": true,
-          "signer": false,
           "docs": [
             "User token account"
           ]
@@ -254,7 +324,6 @@
         {
           "name": "creator_fee_vault",
           "writable": true,
-          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
@@ -262,7 +331,6 @@
         {
           "name": "protocol_fee_wallet",
           "writable": true,
-          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
@@ -270,7 +338,6 @@
         {
           "name": "lp_escrow",
           "writable": true,
-          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
@@ -278,26 +345,51 @@
         {
           "name": "community_pool",
           "writable": true,
-          "signer": false,
           "docs": [
             "Per-token community pool PDA [\"community-pool\", mint]"
           ]
         },
         {
-          "name": "token2022_program",
-          "writable": false,
-          "signer": false,
+          "name": "token_2022_program",
           "docs": [
             "Token-2022 program"
           ]
+        },
+        {
+          "name": "event_authority",
+          "docs": [
+            "TradeEvent authority PDA [\"__event_authority\"]"
+          ]
+        },
+        {
+          "name": "program",
+          "docs": [
+            "This program — required for the TradeEvent self-CPI"
+          ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_sol_out",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "withdraw_liquidity",
       "discriminator": [
-        4
+        149,
+        158,
+        33,
+        185,
+        47,
+        243,
+        253,
+        31
       ],
       "accounts": [
         {
@@ -346,7 +438,14 @@
     {
       "name": "admin_freeze",
       "discriminator": [
-        5
+        21,
+        141,
+        206,
+        49,
+        76,
+        173,
+        174,
+        43
       ],
       "accounts": [
         {
@@ -403,7 +502,14 @@
     {
       "name": "admin_thaw",
       "discriminator": [
-        6
+        170,
+        162,
+        156,
+        101,
+        150,
+        220,
+        238,
+        57
       ],
       "accounts": [
         {
@@ -460,7 +566,14 @@
     {
       "name": "freeze_curve",
       "discriminator": [
-        7
+        32,
+        111,
+        233,
+        162,
+        73,
+        192,
+        120,
+        77
       ],
       "accounts": [
         {
@@ -501,7 +614,14 @@
     {
       "name": "thaw_curve",
       "discriminator": [
-        8
+        132,
+        11,
+        230,
+        49,
+        39,
+        59,
+        37,
+        207
       ],
       "accounts": [
         {
@@ -542,7 +662,14 @@
     {
       "name": "create_token",
       "discriminator": [
-        9
+        84,
+        52,
+        204,
+        228,
+        24,
+        140,
+        234,
+        75
       ],
       "accounts": [
         {
@@ -642,12 +769,46 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "max_user_tokens",
+          "type": "u64"
+        },
+        {
+          "name": "extra_community_fee_bps",
+          "type": "u16"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        },
+        {
+          "name": "required_liquidity",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
     },
     {
       "name": "update_config",
       "discriminator": [
-        10
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
       ],
       "accounts": [
         {
@@ -667,12 +828,24 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
     },
     {
       "name": "migrate_to_meteora",
       "discriminator": [
-        11
+        161,
+        66,
+        43,
+        194,
+        98,
+        181,
+        112,
+        175
       ],
       "accounts": [
         {
@@ -876,12 +1049,24 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "deposit_sol",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "withdraw_lp_escrow",
       "discriminator": [
-        12
+        91,
+        160,
+        165,
+        86,
+        5,
+        144,
+        190,
+        1
       ],
       "accounts": [
         {
@@ -938,7 +1123,14 @@
     {
       "name": "transfer_nft_to_fee_config",
       "discriminator": [
-        13
+        128,
+        168,
+        240,
+        7,
+        142,
+        84,
+        160,
+        5
       ],
       "accounts": [
         {
@@ -995,7 +1187,14 @@
     {
       "name": "claim_creator_fees",
       "discriminator": [
-        14
+        0,
+        23,
+        125,
+        234,
+        156,
+        118,
+        134,
+        89
       ],
       "accounts": [
         {
@@ -1068,7 +1267,14 @@
     {
       "name": "initialize_fee_config",
       "discriminator": [
-        15
+        62,
+        162,
+        20,
+        133,
+        121,
+        65,
+        145,
+        27
       ],
       "accounts": [
         {
@@ -1096,12 +1302,64 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "pool",
+          "type": "pubkey"
+        },
+        {
+          "name": "position_nft_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "creator_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "protocol_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "lp_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "community_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "token_a_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "token_b_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "tier_splits",
+          "type": {
+            "vec": "u8"
+          }
+        },
+        {
+          "name": "tier_boundaries",
+          "type": {
+            "vec": "u8"
+          }
+        }
+      ]
     },
     {
       "name": "claim_and_distribute",
       "discriminator": [
-        16
+        111,
+        147,
+        210,
+        144,
+        253,
+        16,
+        187,
+        238
       ],
       "accounts": [
         {
@@ -1265,12 +1523,36 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "creator_amount",
+          "type": "u64"
+        },
+        {
+          "name": "protocol_amount",
+          "type": "u64"
+        },
+        {
+          "name": "lp_amount",
+          "type": "u64"
+        },
+        {
+          "name": "community_amount",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "update_splits",
       "discriminator": [
-        17
+        195,
+        115,
+        32,
+        157,
+        46,
+        223,
+        114,
+        81
       ],
       "accounts": [
         {
@@ -1290,12 +1572,26 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "tier_splits",
+          "type": {
+            "vec": "u8"
+          }
+        }
+      ]
     },
     {
       "name": "update_wallets",
       "discriminator": [
-        18
+        161,
+        63,
+        139,
+        31,
+        207,
+        236,
+        60,
+        42
       ],
       "accounts": [
         {
@@ -1315,12 +1611,36 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "creator_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "protocol_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "lp_wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "community_wallet",
+          "type": "pubkey"
+        }
+      ]
     },
     {
       "name": "grow_liquidity",
       "discriminator": [
-        19
+        247,
+        94,
+        62,
+        193,
+        172,
+        132,
+        201,
+        52
       ],
       "accounts": [
         {
@@ -1497,7 +1817,14 @@
     {
       "name": "admin_withdraw_creator_fees",
       "discriminator": [
-        20
+        159,
+        151,
+        252,
+        104,
+        210,
+        99,
+        30,
+        202
       ],
       "accounts": [
         {
@@ -1586,7 +1913,14 @@
     {
       "name": "admin_withdraw_fee_config",
       "discriminator": [
-        21
+        87,
+        184,
+        217,
+        245,
+        198,
+        28,
+        61,
+        61
       ],
       "accounts": [
         {
@@ -1635,7 +1969,14 @@
     {
       "name": "admin_pda_withdraw",
       "discriminator": [
-        22
+        15,
+        181,
+        172,
+        141,
+        97,
+        253,
+        232,
+        0
       ],
       "accounts": [
         {
@@ -1671,50 +2012,175 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "create_buyback_engine",
       "discriminator": [
-        23
-      ],
-      "accounts": [],
-      "args": []
-    },
-    {
-      "name": "fund_engine",
-      "discriminator": [
-        24
-      ],
-      "accounts": [],
-      "args": []
-    },
-    {
-      "name": "engine_buy_curve",
-      "discriminator": [
-        25
+        78,
+        34,
+        140,
+        163,
+        194,
+        173,
+        11,
+        205
       ],
       "accounts": [
         {
           "name": "admin",
-          "writable": false,
-          "signer": true,
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "source_pda",
+          "writable": true,
           "docs": [
-            "Admin (auth)"
+            "Funding source (community pool or jackpot)"
           ]
         },
         {
           "name": "engine",
           "writable": true,
-          "signer": false,
+          "docs": [
+            "Engine PDA being created"
+          ]
+        },
+        {
+          "name": "engine_token_ata",
+          "writable": true,
+          "docs": [
+            "Engine Token-2022 ATA"
+          ]
+        },
+        {
+          "name": "engine_wsol_ata",
+          "writable": true,
+          "docs": [
+            "Engine wSOL ATA"
+          ]
+        },
+        {
+          "name": "wsol_mint"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_2022_program"
+        },
+        {
+          "name": "token_program",
+          "docs": [
+            "SPL Token program"
+          ]
+        },
+        {
+          "name": "ata_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "sol_for_buying",
+          "type": "u64"
+        },
+        {
+          "name": "sol_for_rent_reserve",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "fund_engine",
+      "discriminator": [
+        247,
+        61,
+        48,
+        26,
+        25,
+        198,
+        34,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "community_pool",
+          "writable": true
+        },
+        {
+          "name": "engine",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "additional_sol_for_buying",
+          "type": "u64"
+        },
+        {
+          "name": "additional_rent_reserve",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "engine_buy_curve",
+      "discriminator": [
+        82,
+        212,
+        85,
+        121,
+        66,
+        51,
+        118,
+        36
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "docs": [
+            "Admin"
+          ]
+        },
+        {
+          "name": "engine",
+          "writable": true,
           "docs": [
             "Buyback engine PDA (acts as user)"
           ]
         },
         {
           "name": "config",
-          "writable": false,
-          "signer": false,
           "docs": [
             "Control config PDA"
           ]
@@ -1722,15 +2188,12 @@
         {
           "name": "curve",
           "writable": true,
-          "signer": false,
           "docs": [
-            "Bonding curve PDA"
+            "Control curve PDA"
           ]
         },
         {
           "name": "mint",
-          "writable": false,
-          "signer": false,
           "docs": [
             "Token mint"
           ]
@@ -1738,7 +2201,6 @@
         {
           "name": "vault_ata",
           "writable": true,
-          "signer": false,
           "docs": [
             "Curve vault token account"
           ]
@@ -1746,7 +2208,6 @@
         {
           "name": "engine_token_ata",
           "writable": true,
-          "signer": false,
           "docs": [
             "Engine's Token-2022 ATA (destination)"
           ]
@@ -1754,7 +2215,6 @@
         {
           "name": "creator_fee_vault",
           "writable": true,
-          "signer": false,
           "docs": [
             "Creator fee vault PDA"
           ]
@@ -1762,7 +2222,6 @@
         {
           "name": "protocol_fee_wallet",
           "writable": true,
-          "signer": false,
           "docs": [
             "Protocol fee wallet"
           ]
@@ -1770,7 +2229,6 @@
         {
           "name": "lp_escrow",
           "writable": true,
-          "signer": false,
           "docs": [
             "LP escrow PDA"
           ]
@@ -1778,90 +2236,415 @@
         {
           "name": "community_pool",
           "writable": true,
-          "signer": false,
           "docs": [
             "Per-token community pool PDA"
           ]
         },
         {
-          "name": "token2022_program",
-          "writable": false,
-          "signer": false,
+          "name": "token_2022_program",
           "docs": [
             "Token-2022 program"
           ]
         },
         {
           "name": "system_program",
-          "writable": false,
-          "signer": false,
           "docs": [
             "System program"
           ]
         },
         {
           "name": "control_v1_program",
-          "writable": false,
-          "signer": false,
           "docs": [
-            "Control V1 program (self-CPI target — must match the program id)"
+            "This program (self-CPI to Buy)"
           ]
+        },
+        {
+          "name": "event_authority",
+          "docs": [
+            "TradeEvent authority PDA — forwarded to inner Buy"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "sol_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_tokens_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "engine_buy_meteora",
+      "discriminator": [
+        193,
+        27,
+        249,
+        174,
+        183,
+        41,
+        210,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "engine",
+          "writable": true,
+          "docs": [
+            "Engine PDA (acts as user)"
+          ]
+        },
+        {
+          "name": "curve",
+          "docs": [
+            "Control curve PDA (readonly post-migration)"
+          ]
+        },
+        {
+          "name": "engine_wsol_ata",
+          "writable": true
+        },
+        {
+          "name": "engine_token_ata",
+          "writable": true
+        },
+        {
+          "name": "pool",
+          "writable": true,
+          "docs": [
+            "Meteora pool"
+          ]
+        },
+        {
+          "name": "token_a_vault",
+          "writable": true
+        },
+        {
+          "name": "token_b_vault",
+          "writable": true
+        },
+        {
+          "name": "token_a_mint",
+          "docs": [
+            "Control token mint"
+          ]
+        },
+        {
+          "name": "token_b_mint",
+          "docs": [
+            "WSOL mint"
+          ]
+        },
+        {
+          "name": "pool_authority"
+        },
+        {
+          "name": "event_authority",
+          "docs": [
+            "Meteora event authority PDA"
+          ]
+        },
+        {
+          "name": "meteora_program"
+        },
+        {
+          "name": "referral",
+          "docs": [
+            "Meteora referral (program-id placeholder)"
+          ]
+        },
+        {
+          "name": "token_2022_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "sol_amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_tokens_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "engine_distribute",
+      "discriminator": [
+        125,
+        19,
+        15,
+        216,
+        247,
+        113,
+        131,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "engine",
+          "writable": true
+        },
+        {
+          "name": "engine_token_ata",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_2022_program"
+        },
+        {
+          "name": "ata_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "n",
+          "type": "u8"
+        },
+        {
+          "name": "entries",
+          "type": {
+            "vec": "u8"
+          }
+        }
+      ]
+    },
+    {
+      "name": "claim_user_tokens",
+      "discriminator": [
+        47,
+        29,
+        5,
+        159,
+        176,
+        136,
+        15,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "user_vault",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault_ata",
+          "writable": true
+        },
+        {
+          "name": "destination_ata",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_2022_program"
+        },
+        {
+          "name": "ata_program"
         }
       ],
       "args": []
     },
     {
-      "name": "engine_buy_meteora",
-      "discriminator": [
-        26
-      ],
-      "accounts": [],
-      "args": []
-    },
-    {
-      "name": "engine_distribute",
-      "discriminator": [
-        27
-      ],
-      "accounts": [],
-      "args": []
-    },
-    {
-      "name": "claim_user_tokens",
-      "discriminator": [
-        28
-      ],
-      "accounts": [],
-      "args": []
-    },
-    {
       "name": "close_engine",
       "discriminator": [
-        29
+        112,
+        189,
+        221,
+        22,
+        145,
+        144,
+        224,
+        30
       ],
-      "accounts": [],
-      "args": []
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "engine",
+          "writable": true
+        },
+        {
+          "name": "engine_token_ata",
+          "writable": true
+        },
+        {
+          "name": "engine_wsol_ata",
+          "writable": true
+        },
+        {
+          "name": "community_pool",
+          "writable": true
+        },
+        {
+          "name": "residual_token_destination",
+          "writable": true
+        },
+        {
+          "name": "token_2022_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "ata_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "admin_withdraw_community_pool",
       "discriminator": [
-        30
+        190,
+        210,
+        208,
+        146,
+        138,
+        254,
+        131,
+        82
       ],
-      "accounts": [],
-      "args": []
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "community_pool",
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "admin_withdraw_engine_sol",
       "discriminator": [
-        31
+        157,
+        54,
+        219,
+        53,
+        189,
+        159,
+        188,
+        203
       ],
-      "accounts": [],
-      "args": []
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "config"
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "engine",
+          "writable": true
+        },
+        {
+          "name": "destination",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "create_daily_jackpot",
       "discriminator": [
-        32
+        196,
+        104,
+        173,
+        1,
+        251,
+        105,
+        159,
+        132
       ],
       "accounts": [
         {
@@ -1897,12 +2680,24 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        }
+      ]
     },
     {
       "name": "sweep_to_jackpot",
       "discriminator": [
-        33
+        228,
+        65,
+        1,
+        200,
+        152,
+        176,
+        251,
+        10
       ],
       "accounts": [
         {
@@ -1930,12 +2725,28 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "n",
+          "type": "u8"
+        }
+      ]
     },
     {
       "name": "migrate_config",
       "discriminator": [
-        34
+        92,
+        131,
+        58,
+        105,
+        210,
+        154,
+        224,
+        193
       ],
       "accounts": [
         {
@@ -1960,7 +2771,14 @@
     {
       "name": "request_jackpot_draw",
       "discriminator": [
-        35
+        55,
+        152,
+        243,
+        215,
+        25,
+        98,
+        238,
+        48
       ],
       "accounts": [
         {
@@ -2036,12 +2854,44 @@
           ]
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "jackpot_unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "draw_unique_id",
+          "type": "u64"
+        },
+        {
+          "name": "seed",
+          "type": {
+            "vec": "u8"
+          }
+        },
+        {
+          "name": "participants_hash",
+          "type": {
+            "vec": "u8"
+          }
+        },
+        {
+          "name": "participant_count",
+          "type": "u32"
+        }
+      ]
     },
     {
       "name": "update_lp_min_threshold",
       "discriminator": [
-        36
+        237,
+        70,
+        156,
+        213,
+        32,
+        42,
+        212,
+        113
       ],
       "accounts": [
         {
@@ -2061,18 +2911,167 @@
           ]
         }
       ],
+      "args": [
+        {
+          "name": "lp_min_threshold",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "idl_create",
+      "discriminator": [
+        165,
+        57,
+        163,
+        182,
+        13,
+        103,
+        62,
+        37
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "docs": [
+            "Admin paying rent + initial IDL authority"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": false,
+          "signer": false,
+          "docs": [
+            "Control config PDA"
+          ]
+        },
+        {
+          "name": "idl_account",
+          "writable": true,
+          "signer": false,
+          "docs": [
+            "Anchor IDL account at create_with_seed(program_signer, 'anchor:idl', program_id)"
+          ]
+        },
+        {
+          "name": "program_signer",
+          "writable": false,
+          "signer": false,
+          "docs": [
+            "find_program_address(&[], program_id).0"
+          ]
+        },
+        {
+          "name": "system_program",
+          "writable": false,
+          "signer": false
+        }
+      ],
+      "args": [
+        {
+          "name": "total_data_len",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "idl_write",
+      "discriminator": [
+        136,
+        138,
+        108,
+        118,
+        46,
+        146,
+        6,
+        111
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": false,
+          "signer": true,
+          "docs": [
+            "Admin (must equal IDL authority)"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": false,
+          "signer": false,
+          "docs": [
+            "Control config PDA"
+          ]
+        },
+        {
+          "name": "idl_account",
+          "writable": true,
+          "signer": false,
+          "docs": [
+            "Anchor IDL account"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "offset",
+          "type": "u32"
+        },
+        {
+          "name": "chunk_len",
+          "type": "u32"
+        },
+        {
+          "name": "chunk_bytes",
+          "type": {
+            "vec": "u8"
+          }
+        }
+      ]
+    },
+    {
+      "name": "idl_close",
+      "discriminator": [
+        49,
+        69,
+        34,
+        50,
+        56,
+        170,
+        112,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "docs": [
+            "Admin (receives drained lamports)"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": false,
+          "signer": false,
+          "docs": [
+            "Control config PDA"
+          ]
+        },
+        {
+          "name": "idl_account",
+          "writable": true,
+          "signer": false,
+          "docs": [
+            "Anchor IDL account to close"
+          ]
+        }
+      ],
       "args": []
     }
   ],
-  "metadata": {
-    "name": "print_control_v1",
-    "version": "0.1.0",
-    "spec": "0.1.0",
-    "description": "Print Control V1 — bonding curve token launchpad",
-    "origin": "shank",
-    "address": "CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27"
-  },
-  "address": "CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27",
   "events": [
     {
       "name": "TradeEvent",
@@ -2099,15 +3098,15 @@
             "type": "pubkey"
           },
           {
-            "name": "solAmount",
+            "name": "sol_amount",
             "type": "u64"
           },
           {
-            "name": "tokenAmount",
+            "name": "token_amount",
             "type": "u64"
           },
           {
-            "name": "isBuy",
+            "name": "is_buy",
             "type": "bool"
           },
           {
@@ -2115,19 +3114,19 @@
             "type": "pubkey"
           },
           {
-            "name": "virtualSolReserves",
+            "name": "virtual_sol_reserves",
             "type": "u64"
           },
           {
-            "name": "virtualTokenReserves",
+            "name": "virtual_token_reserves",
             "type": "u64"
           },
           {
-            "name": "realSolReserves",
+            "name": "real_sol_reserves",
             "type": "u64"
           },
           {
-            "name": "realTokenReserves",
+            "name": "real_token_reserves",
             "type": "u64"
           },
           {
@@ -2135,11 +3134,11 @@
             "type": "u64"
           },
           {
-            "name": "creatorFee",
+            "name": "creator_fee",
             "type": "u64"
           },
           {
-            "name": "solToUser",
+            "name": "sol_to_user",
             "type": "u64"
           }
         ]

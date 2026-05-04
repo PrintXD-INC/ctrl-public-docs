@@ -62,11 +62,11 @@ This document covers only what you need to trade. Advanced features ship later.
 | Networks | Mainnet **and** Devnet — same program ID on both |
 | Program ID | `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27` |
 | Framework | Pinocchio (raw BPF — *not* Anchor) |
-| Instruction disc | `u8` (single byte, not 8-byte Anchor disc) |
+| Instruction disc | **Dual-mode**: legacy `u8` (single byte) **or** 8-byte Anchor-style `sha256("global:<name>")[..8]` |
 | Token program | `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` (Token-2022) |
 | System program | `11111111111111111111111111111111` |
 
-> **Pinocchio, not Anchor.** Instruction data starts with a single `u8` discriminant followed by little-endian primitive args (parsed manually via `bytemuck`, not Borsh) — there is no 8-byte hashed discriminant like Anchor programs. Use the discriminant shown on each instruction below.
+> **Pinocchio runtime, dual-mode dispatch.** Instruction data starts with the discriminant followed by little-endian primitive args (parsed manually via `bytemuck`, not Borsh — no Anchor framework on-chain). The dispatcher tries the **8-byte Anchor-style discriminator** first (`sha256("global:<name>")[..8]`), then falls back to the **legacy 1-byte enum disc**. Both forms route to the same handler, so existing 1-byte clients keep working forever and new clients can use the 8-byte form to get IDL-driven decode in Anchor SDKs / Solscan / SolanaFM. Each instruction below lists both forms.
 
 ---
 
@@ -176,9 +176,11 @@ export function deriveVaultAta(mint: PublicKey): PublicKey {
 
 Swap SOL for tokens on the bonding curve.
 
-**Discriminant:** `0x02` · **Phase:** pre-graduation only · **Accounts:** 14
+**Discriminator:** `0x02` (legacy) **or** `[102, 6, 61, 18, 1, 218, 235, 234]` (Anchor) · **Phase:** pre-graduation only · **Accounts:** 14
 
-> **Breaking change — May 2026.** Every `Buy` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 12 and 13 — `eventAuthority` + `program`). Old callers that send 12 accounts will fail with `NotEnoughAccountKeys`. Live on Devnet now; the same upgrade is rolling out to Mainnet — once it lands, pre-upgrade callers there will fail too.
+> **Breaking change — May 2026.** Every `Buy` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 12 and 13 — `eventAuthority` + `program`). Old callers that send 12 accounts will fail with `NotEnoughAccountKeys`. The upgrade is live on **both Mainnet and Devnet** as of May 2026.
+
+> **Dual-mode discriminator.** The on-chain dispatcher accepts both forms: the legacy 1-byte disc (`0x02`) or the 8-byte Anchor-style disc (`sha256("global:buy")[..8]` = `[102, 6, 61, 18, 1, 218, 235, 234]`). Old clients keep working; Anchor SDK clients get IDL-driven decode for free. Solscan / SolanaFM render the swap as `Buy` because they recognize the 8-byte form. The TS examples below use the 1-byte form for brevity — to switch to Anchor-style, replace the leading byte with the 8-byte buffer; everything else (accounts, fields, behavior) is identical.
 
 ### Args (little-endian primitives, in order after the discriminant byte)
 
@@ -219,9 +221,11 @@ Swap SOL for tokens on the bonding curve.
 
 Swap tokens for SOL on the bonding curve.
 
-**Discriminant:** `0x03` · **Phase:** pre-graduation only · **Accounts:** 13
+**Discriminator:** `0x03` (legacy) **or** `[51, 230, 133, 164, 1, 127, 131, 173]` (Anchor) · **Phase:** pre-graduation only · **Accounts:** 13
 
-> **Breaking change — May 2026.** Every `Sell` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 11 and 12 — `eventAuthority` + `program`). Old callers that send 11 accounts will fail with `NotEnoughAccountKeys`. Live on Devnet now; rolling out to Mainnet shortly.
+> **Breaking change — May 2026.** Every `Sell` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 11 and 12 — `eventAuthority` + `program`). Old callers that send 11 accounts will fail with `NotEnoughAccountKeys`. The upgrade is live on **both Mainnet and Devnet** as of May 2026.
+
+> **Dual-mode discriminator.** The dispatcher accepts both forms: the legacy 1-byte disc (`0x03`) or the 8-byte Anchor-style disc (`sha256("global:sell")[..8]` = `[51, 230, 133, 164, 1, 127, 131, 173]`). Old clients keep working; Anchor SDK clients get IDL-driven decode for free. The TS examples below use the 1-byte form for brevity — to switch to Anchor-style, replace the leading byte with the 8-byte buffer; everything else (accounts, fields, behavior) is identical.
 
 ### Args (little-endian primitives, in order after the discriminant byte)
 
@@ -333,6 +337,8 @@ Graduation is automatic and atomic: the Control program seeds a Meteora pool wit
 ## TypeScript examples
 
 End-to-end snippets for the four things every integrator needs: build a Buy transaction, build a Sell transaction, read the curve account for live quotes, and confirm what a trade actually delivered on-chain.
+
+> **Discriminator form used below.** The `buildBuyTx` and `buildSellTx` examples encode the **legacy 1-byte** discriminant (`0x02` / `0x03`) for brevity. To use the **8-byte Anchor-style** form instead, swap the leading byte for the 8-byte buffer — e.g. replace `buf.writeUInt8(BUY_DISCRIMINANT, 0)` with `Buffer.from([102, 6, 61, 18, 1, 218, 235, 234]).copy(buf, 0)` and bump the buffer size by 7. Account list, args, and on-chain behavior are identical. Either form works; the dispatcher tries Anchor first and falls back to legacy.
 
 ### 1. Build a Buy transaction
 
@@ -738,7 +744,7 @@ export async function parseTradeEvents(
 
 ## See also
 
-- [`../idl/control.json`](../idl/control.json) — canonical Shank IDL (37 instructions).
+- [`../idl/control.json`](../idl/control.json) — canonical IDL (40 instructions, 1 event, 8-byte Anchor-style discriminators).
 - [Solana Explorer IDL](https://explorer.solana.com/address/CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27/idl) — fetch the on-chain copy directly.
 - [FAQ](./FAQ.md) — short answers on graduation, slippage, networks.
 
