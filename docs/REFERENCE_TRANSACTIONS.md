@@ -25,9 +25,15 @@ These are real, successful transactions for each instruction Control exposes tod
 
 ### Mainnet
 
-> **Sample signatures pending — program upgrade is already live.** The May 2026 self-CPI `TradeEvent` upgrade and the dual-mode discriminator dispatch are deployed on **Mainnet now**, at the same Program ID `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27`, with the same **14-account Buy / 13-account Sell** layout and the same on-chain behavior as Devnet. Only the reference Create / Buy / Sell sample transactions on Mainnet are still being produced — they will be added here once available. Until then, the Devnet samples above are a faithful preview of what Mainnet txs look like (same wire format, same accounts, same event log).
+| Instruction | Discriminator | Signature |
+|---|---|---|
+| Create | `0x09` (legacy) / `[84, 52, 204, 228, 24, 140, 234, 75]` (Anchor) | [`5aMjqtnmzr…FQ3dUYAe`](https://solscan.io/tx/5aMjqtnmzrKvXAZRq2daDe1Mj755273dRqz2iviy48hgtjWys9rTvLxzUKxMv5F7ew8SgHFAKV1kJEbiFQ3dUYAe) |
+| Buy | `0x02` (legacy) / `[102, 6, 61, 18, 1, 218, 235, 234]` (Anchor) | [`2yBpVSUqDt…Z4SN6iX4`](https://solscan.io/tx/2yBpVSUqDt7dz7kx2ZCst9toqECBWqb4v81pDCsJy8uTh2t5P2yvgDtCg9siHJuiNjv8iZPD8DLJBjLwZ4SN6iX4) |
+| Sell | `0x03` (legacy) / `[51, 230, 133, 164, 1, 127, 131, 173]` (Anchor) | [`2bEG5cx9Ch…NL1humAKQ`](https://solscan.io/tx/2bEG5cx9ChPoGh9pf7tSj78NQzF1UYHweJMSHgSqCbaq4RcQo1gpPKUBSgeoNfVJuaYEbHpjaiS2jSkNL1humAKQ) |
 
-> **Current as of May 2026 — live on Mainnet and Devnet.** Every Buy and Sell emits an Anchor self-CPI `TradeEvent` on the inner instructions, and the dispatcher accepts both the legacy 1-byte disc and the 8-byte Anchor-style disc. The new Devnet signatures above were produced with the 8-byte form and carry the event log under the new **14-account Buy / 13-account Sell** layout. To decode the event payload (exact `solAmount`, `tokenAmount`, fees, post-trade reserves) walk `tx.meta.innerInstructions` — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent) in the Integration Guide. Treat the entries above as ground truth for the **account layout, both discriminator forms, and event log shape**.
+> **Same wire format on both networks.** Mainnet and Devnet share the Program ID `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27` and the identical post-May-2026 layout: **14-account Buy / 13-account Sell**, dual-mode discriminator dispatch (legacy 1-byte or 8-byte Anchor-style), and the self-CPI `TradeEvent` emitted as an inner instruction on every trade. The same client code works against either network — pick the cluster via your RPC endpoint, no code changes required.
+
+> **Current as of May 2026 — live on both Mainnet and Devnet.** All six sample signatures above were produced with the 8-byte Anchor-style discriminator and carry the event log under the new account layout. To decode the event payload (exact `solAmount`, `tokenAmount`, fees, post-trade reserves) walk `tx.meta.innerInstructions` — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent) in the Integration Guide. Treat the entries above as ground truth for the **account layout, both discriminator forms, and event log shape**.
 
 ---
 
@@ -76,7 +82,7 @@ Pulled directly from [`idl/control.json`](../idl/control.json) (instruction inde
 | Account 4 | Curve PDA — start watching for trades from here |
 | Instruction data | Token-2022 metadata args (name, symbol, URI) |
 
-Refer to a Solscan-decoded sample tx (Devnet Create signature above) for the current byte layout of the metadata args. A Mainnet Create sample will be added here when produced — the on-chain program already runs the same upgrade as Devnet, only the reference signature is pending.
+Refer to a Solscan-decoded sample tx (either Create signature in the tables above) for the current byte layout of the metadata args. Mainnet and Devnet share the same wire format, so either reference tx is authoritative.
 
 ### Detecting new tokens in real time
 
