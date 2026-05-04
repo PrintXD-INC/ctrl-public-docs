@@ -62,11 +62,11 @@ This document covers only what you need to trade. Advanced features ship later.
 | Networks | Mainnet **and** Devnet — same program ID on both |
 | Program ID | `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27` |
 | Framework | Pinocchio (raw BPF — *not* Anchor) |
-| Instruction disc | **Dual-mode**: legacy `u8` (single byte) **or** 8-byte Anchor-style `sha256("global:<name>")[..8]` |
+| Instruction disc | 8-byte Anchor sighash (`sha256("global:<name>")[..8]`) — what the IDL declares and what Solscan/SolanaFM decode against. Legacy 1-byte enum disc (`0x02` Buy, `0x03` Sell, etc.) is also accepted by the on-chain dispatcher for backward compatibility. See the per-instruction sections below for the full byte arrays. |
 | Token program | `TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb` (Token-2022) |
 | System program | `11111111111111111111111111111111` |
 
-> **Pinocchio runtime, dual-mode dispatch.** Instruction data starts with the discriminant followed by little-endian primitive args (parsed manually via `bytemuck`, not Borsh — no Anchor framework on-chain). The dispatcher tries the **8-byte Anchor-style discriminator** first (`sha256("global:<name>")[..8]`), then falls back to the **legacy 1-byte enum disc**. Both forms route to the same handler, so existing 1-byte clients keep working forever and new clients can use the 8-byte form to get IDL-driven decode in Anchor SDKs / Solscan / SolanaFM. Each instruction below lists both forms.
+> **Pinocchio, not Anchor.** The on-chain IDL declares an 8-byte Anchor-style discriminator (`sha256("global:<name>")[..8]`) followed by little-endian primitive args (manually parsed via `bytemuck`, not Borsh). The on-chain dispatcher also accepts a single-byte legacy form (`0x02` Buy, `0x03` Sell, etc.) so old clients keep working — both forms are documented on each instruction card below.
 
 ---
 
@@ -302,7 +302,7 @@ sol_out     = (total_sol * token_in) / (total_token + token_in)
 
 ## Fee structure
 
-A 3% total is split across four destinations on every trade.
+Default total: 3.00% per trade — five slices going to four destinations (community base + extra both land in `communityPool`). Per-token mints can shift the total via `curve.extra_community_fee_bps`.
 
 | Slice | Rate | Destination | Source | Purpose |
 |---|---|---|---|---|
@@ -708,7 +708,7 @@ Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruc
 0..8     ANCHOR_LOG_DISC      sha256("anchor:event")[..8]   = [228, 69,165, 46, 81,203,154, 29]
 8..16    TRADE_EVENT_DISC     sha256("event:TradeEvent")[..8] = [189,219,127,211, 78,230, 97,238]
 16..48   mint                 pubkey (32)
-48..56   solAmount            u64 LE (lamports moved into / out of the curve)
+48..56   solAmount            u64 LE (Buy: post-fee net into AMM. Sell: pre-fee gross out of AMM. See callout below.)
 56..64   tokenAmount          u64 LE (raw base units moved)
 64..65   isBuy                u8     (1 = Buy, 0 = Sell)
 65..97   user                 pubkey (32)

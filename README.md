@@ -14,7 +14,7 @@ This repository documents how to integrate **Buy** and **Sell** with the Control
 | Networks | Mainnet **and** Devnet — same program ID on both |
 | Framework | Pinocchio (raw BPF — not Anchor) |
 | Token standard | Token-2022 (`TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb`) |
-| Instruction discriminator | **Dual-mode**: legacy `u8` (1 byte) **or** 8-byte Anchor-style `sha256("global:<name>")[..8]` |
+| Instruction discriminator | 8-byte Anchor sighash (`sha256("global:<name>")[..8]`) — what the IDL declares and what Solscan/SolanaFM decode against. Legacy 1-byte enum disc (`0x02` Buy, `0x03` Sell, etc.) is also accepted by the on-chain dispatcher for backward compatibility. See the per-instruction sections below for the full byte arrays. |
 
 ## Scope of v1
 
