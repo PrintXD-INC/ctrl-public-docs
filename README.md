@@ -35,10 +35,10 @@ The Control program ships **40 instructions** in total. Everything else (token c
 
 ## IDL
 
-- [`idl/control.json`](./idl/control.json) — canonical IDL, copied from the on-chain program. 40 instructions, 1 event (`TradeEvent`), 8-byte Anchor-style discriminators alongside the legacy 1-byte form. Account orders, instruction names, and event/type layouts are authoritative.
+- [`idl/control.json`](./idl/control.json) — canonical IDL, copied from the on-chain program. 40 instructions, 1 event (`TradeEvent`), populated `args` for every instruction, 8-byte Anchor-style discriminators alongside the legacy 1-byte form. Account orders, instruction names, and event/type layouts are authoritative.
 - Live copy on Solana Explorer: <https://explorer.solana.com/address/CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27/idl>
 
-> Pinocchio parses instruction data manually with `bytemuck` (not Borsh), so the `args` blocks in the IDL are intentionally empty — only `events` and `types` are populated for parsing. The wire format for `Buy` and `Sell` is in [Integration Guide → Buy](./docs/INTEGRATION.md#buy) and [→ Sell](./docs/INTEGRATION.md#sell).
+> **Args blocks are now populated.** Pinocchio parses instruction data manually with `bytemuck` (no derive macro, not Borsh), so a raw shank IDL cannot introspect arg layouts. The published IDL solves this with a post-processor (`scripts/augment_idl.ts` in the on-chain program repo) that hand-rolls the args for each instruction so explorers and Anchor SDKs can decode them. `buy` declares `sol_amount: u64, min_tokens_out: u64`; `sell` declares `amount: u64, min_sol_out: u64`. The full wire format for `Buy` and `Sell` is in [Integration Guide → Buy](./docs/INTEGRATION.md#buy) and [→ Sell](./docs/INTEGRATION.md#sell).
 
 ## Contact
 

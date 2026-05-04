@@ -21,7 +21,7 @@ How to execute **Buy** and **Sell** on the Control program from your own client.
 
 **Control** is a bonding-curve token launchpad on Solana. Each token trades against a deterministic AMM curve embedded in the on-chain program. Every trade adjusts the curve's reserves; price is a pure function of those reserves.
 
-When a curve accumulates its **required liquidity threshold** in real reserves it *graduates*: the remaining supply and pooled SOL are migrated into a **Meteora DAMM v2** pool, and the token continues life as a standard AMM asset. The threshold is configured per-token in the curve state (`curve.required_liquidity`) — currently `0.5 SOL` on devnet, `~95 SOL` on mainnet. Before graduation, all trading goes through Control. After graduation, route through Meteora DAMM v2.
+When a curve accumulates its **required liquidity threshold** in real reserves it *graduates*: the remaining supply and pooled SOL are migrated into a **Meteora DAMM v2** pool, and the token continues life as a standard AMM asset. The threshold is configured per-token in the curve state (`curve.required_liquidity`) — default `95 SOL` on both networks, bounded `0.1 SOL ≤ required_liquidity ≤ 10,000 SOL`. Before graduation, all trading goes through Control. After graduation, route through Meteora DAMM v2.
 
 > **In scope.** Integrators only call `Buy` and `Sell`. Token creation and admin instructions are out of scope for this guide.
 >
@@ -313,16 +313,19 @@ A 3% total is split across four destinations on every trade.
 
 Fees are taken from the *input* side. For a Buy, fees come out of `sol_amount` before tokens are priced; for a Sell, fees come out of the proceeds after the AMM computes `sol_out`. The contract sums `config` base fees plus `curve.extra_community_fee_bps` on every trade — read both accounts when computing exact quotes.
 
+> **Per-slice arithmetic in TradeEvent.** The on-chain event reports `fee = total_fee_bps × sol_amount / 10_000` (the full fee, taken off the input first), and the per-slice values (`creator_fee`, `protocol_fee`, `lp_fee`, `extra_community_fee`) are then each computed against the **post-total-fee net** (`curve_sol = sol_amount − fee`), not against the original input. The `community_fee` slice receives whatever total-fee remainder is left after the others to absorb rounding dust. Sums still equal `total_fee`, but if you're auditing per-slice numbers expect this nuance — it's why the slices reported in `TradeEvent` won't recompute cleanly if you multiply each `*_bps` against the original `sol_amount`. See the §10.4 TradeEvent decoder for exact lamport amounts.
+
 ---
 
 ## Graduation
 
 When real SOL reserves reach the curve's required liquidity, Control migrates the token to Meteora DAMM v2.
 
-The graduation threshold is **per-token**, stored on-chain as `curve.required_liquidity`. Read the curve account at quote time — don't hard-code a value:
+The graduation threshold is **per-token**, stored on-chain as `curve.required_liquidity`. Read the curve account at quote time — don't hard-code a value.
 
-- **Devnet:** currently `0.5 SOL` (program constant `HARDCAP_REQUIRED_LIQUIDITY = 500_000_000` lamports — used as the default when curves are created).
-- **Mainnet:** `~95 SOL`; the final per-token value is set by the program admin.
+- **Default (both networks):** `95 SOL` (program constant `HARDCAP_REQUIRED_LIQUIDITY = 95_000_000_000` lamports — used as the default when curves are created).
+- **Bounds:** `0.1 SOL ≤ required_liquidity ≤ 10,000 SOL` (program constants `MIN_REQUIRED_LIQUIDITY` / `MAX_REQUIRED_LIQUIDITY`).
+- **Per-token override:** the final value lives in `curve.required_liquidity` and can sit anywhere within those bounds — set by the program admin at curve creation. Devnet test mints are commonly created with `10,000 SOL` to keep them from graduating mid-test.
 
 Graduation is automatic and atomic: the Control program seeds a Meteora pool with the accumulated `lpEscrow` SOL and the residual tokens in the curve's vault, then marks the curve completed. After graduation:
 
@@ -342,7 +345,7 @@ End-to-end snippets for the four things every integrator needs: build a Buy tran
 
 ### 1. Build a Buy transaction
 
-Derive every PDA / ATA from the mint, encode the instruction data, attach an idempotent ATA-creation instruction, and return an unsigned `Transaction` ready for the user's wallet to sign.
+Read the curve once to obtain every per-mint address (`creator`, `vaultAta`, `lpEscrow`, `creatorFeeVault`) and the config once to obtain `protocolFeeWallet` — both are pre-derived on-chain and do not need to be passed in. Encode the instruction data, attach an idempotent ATA-creation instruction, and return an unsigned `Transaction` ready for the user's wallet to sign.
 
 ```ts
 import {
@@ -363,12 +366,10 @@ import {
   CONTROL_PROGRAM_ID,
   deriveConfig,
   deriveCurve,
-  deriveCreatorFeeVault,
-  deriveLpEscrow,
   deriveCommunityPool,
-  deriveVaultAta,
   deriveEventAuthority,
 } from './pdas';
+import { readCurveState, readProtocolFeeWallet } from './state';
 
 const BUY_DISCRIMINANT = 2;
 
@@ -384,27 +385,25 @@ export async function buildBuyTx(params: {
   connection: Connection;
   user: PublicKey;
   mint: PublicKey;
-  creator: PublicKey;
-  protocolFeeWallet: PublicKey;
   solAmountLamports: bigint;
   minTokensOut: bigint;
+  protocolFeeWallet?: PublicKey; // optional cache — omit and we'll fetch from config
 }): Promise<Transaction> {
-  const {
-    connection,
-    user,
-    mint,
-    creator,
-    protocolFeeWallet,
-    solAmountLamports,
-    minTokensOut,
-  } = params;
+  const { connection, user, mint, solAmountLamports, minTokensOut } = params;
 
-  // 1. Derive every PDA / ATA needed.
+  // 1. Read on-chain state. The curve gives us creator + vault + lpEscrow + creatorFeeVault
+  //    pre-derived; the config gives us the protocol fee wallet. Two RPC calls (or one if
+  //    the caller pre-fetched protocolFeeWallet).
+  const curveState = await readCurveState(connection, mint);
+  if (!curveState)             throw new Error('Curve account missing — already graduated, route to Meteora DAMM v2');
+  if (curveState.isCompleted)  throw new Error('Curve has graduated — route to Meteora DAMM v2');
+  if (curveState.isFrozen)     throw new Error('Curve is frozen (migration in flight) — retry shortly');
+
+  const protocolFeeWallet = params.protocolFeeWallet ?? await readProtocolFeeWallet(connection);
+
+  // 2. Derive the few addresses NOT stored on the curve (program-wide PDAs + the user's ATA).
   const config = deriveConfig();
   const curve = deriveCurve(mint);
-  const vaultAta = deriveVaultAta(mint);
-  const creatorFeeVault = deriveCreatorFeeVault(mint, creator);
-  const lpEscrow = deriveLpEscrow(mint);
   const communityPool = deriveCommunityPool(mint);
   const eventAuthority = deriveEventAuthority();
   const userAta = getAssociatedTokenAddressSync(
@@ -414,7 +413,7 @@ export async function buildBuyTx(params: {
     TOKEN_2022_PROGRAM_ID,
   );
 
-  // 2. Ensure the user's Token-2022 ATA exists in the same tx.
+  // 3. Ensure the user's Token-2022 ATA exists in the same tx.
   const ataIx = createAssociatedTokenAccountIdempotentInstruction(
     user,
     userAta,
@@ -423,24 +422,24 @@ export async function buildBuyTx(params: {
     TOKEN_2022_PROGRAM_ID,
   );
 
-  // 3. Build the Buy instruction (14 accounts — last two are for self-CPI TradeEvent).
+  // 4. Build the Buy instruction (14 accounts — last two are for self-CPI TradeEvent).
   const buyIx = new TransactionInstruction({
     programId: CONTROL_PROGRAM_ID,
     keys: [
-      { pubkey: user,                    isSigner: true,  isWritable: true  },
-      { pubkey: config,                  isSigner: false, isWritable: false },
-      { pubkey: curve,                   isSigner: false, isWritable: true  },
-      { pubkey: mint,                    isSigner: false, isWritable: false },
-      { pubkey: vaultAta,                isSigner: false, isWritable: true  },
-      { pubkey: userAta,                 isSigner: false, isWritable: true  },
-      { pubkey: creatorFeeVault,         isSigner: false, isWritable: true  },
-      { pubkey: protocolFeeWallet,       isSigner: false, isWritable: true  },
-      { pubkey: lpEscrow,                isSigner: false, isWritable: true  },
-      { pubkey: communityPool,           isSigner: false, isWritable: true  },
-      { pubkey: TOKEN_2022_PROGRAM_ID,   isSigner: false, isWritable: false },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      { pubkey: eventAuthority,          isSigner: false, isWritable: false },
-      { pubkey: CONTROL_PROGRAM_ID,      isSigner: false, isWritable: false },
+      { pubkey: user,                       isSigner: true,  isWritable: true  },
+      { pubkey: config,                     isSigner: false, isWritable: false },
+      { pubkey: curve,                      isSigner: false, isWritable: true  },
+      { pubkey: mint,                       isSigner: false, isWritable: false },
+      { pubkey: curveState.vaultAta,        isSigner: false, isWritable: true  },
+      { pubkey: userAta,                    isSigner: false, isWritable: true  },
+      { pubkey: curveState.creatorFeeVault, isSigner: false, isWritable: true  },
+      { pubkey: protocolFeeWallet,          isSigner: false, isWritable: true  },
+      { pubkey: curveState.lpEscrow,        isSigner: false, isWritable: true  },
+      { pubkey: communityPool,              isSigner: false, isWritable: true  },
+      { pubkey: TOKEN_2022_PROGRAM_ID,      isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId,    isSigner: false, isWritable: false },
+      { pubkey: eventAuthority,             isSigner: false, isWritable: false },
+      { pubkey: CONTROL_PROGRAM_ID,         isSigner: false, isWritable: false },
     ],
     data: encodeBuyData(solAmountLamports, minTokensOut),
   });
@@ -461,8 +460,6 @@ async function example() {
     connection,
     user: user.publicKey,
     mint: new PublicKey('<CONTROL_TOKEN_MINT>'),
-    creator: new PublicKey('<CREATOR_PUBKEY>'),
-    protocolFeeWallet: new PublicKey('<PROTOCOL_FEE_WALLET>'), // from config.protocol_fee_wallet
     solAmountLamports: 100_000_000n, // 0.1 SOL
     minTokensOut: 1n, // set based on a pre-trade quote + slippage
   });
@@ -491,12 +488,10 @@ import {
   CONTROL_PROGRAM_ID,
   deriveConfig,
   deriveCurve,
-  deriveCreatorFeeVault,
-  deriveLpEscrow,
   deriveCommunityPool,
-  deriveVaultAta,
   deriveEventAuthority,
 } from './pdas';
+import { readCurveState, readProtocolFeeWallet } from './state';
 
 const SELL_DISCRIMINANT = 3;
 
@@ -512,27 +507,24 @@ export async function buildSellTx(params: {
   connection: Connection;
   user: PublicKey;
   mint: PublicKey;
-  creator: PublicKey;
-  protocolFeeWallet: PublicKey;
   tokenAmount: bigint;     // raw base units (respects mint decimals)
   minSolOut: bigint;       // lamports, slippage-protected floor
+  protocolFeeWallet?: PublicKey; // optional cache — omit and we'll fetch from config
 }): Promise<Transaction> {
-  const {
-    connection,
-    user,
-    mint,
-    creator,
-    protocolFeeWallet,
-    tokenAmount,
-    minSolOut,
-  } = params;
+  const { connection, user, mint, tokenAmount, minSolOut } = params;
 
-  // 1. Derive PDAs / ATAs.
+  // 1. Read on-chain state. Same pattern as Buy: curve gives us the per-mint addresses
+  //    pre-derived; config gives us the protocol fee wallet.
+  const curveState = await readCurveState(connection, mint);
+  if (!curveState)             throw new Error('Curve account missing — already graduated, route to Meteora DAMM v2');
+  if (curveState.isCompleted)  throw new Error('Curve has graduated — route to Meteora DAMM v2');
+  if (curveState.isFrozen)     throw new Error('Curve is frozen (migration in flight) — retry shortly');
+
+  const protocolFeeWallet = params.protocolFeeWallet ?? await readProtocolFeeWallet(connection);
+
+  // 2. Derive program-wide PDAs + the user's ATA.
   const config = deriveConfig();
   const curve = deriveCurve(mint);
-  const vaultAta = deriveVaultAta(mint);
-  const creatorFeeVault = deriveCreatorFeeVault(mint, creator);
-  const lpEscrow = deriveLpEscrow(mint);
   const communityPool = deriveCommunityPool(mint);
   const eventAuthority = deriveEventAuthority();
   const userAta = getAssociatedTokenAddressSync(
@@ -542,23 +534,23 @@ export async function buildSellTx(params: {
     TOKEN_2022_PROGRAM_ID,
   );
 
-  // 2. Build the Sell instruction (13 accounts — last two are for self-CPI TradeEvent).
+  // 3. Build the Sell instruction (13 accounts — last two are for self-CPI TradeEvent).
   const sellIx = new TransactionInstruction({
     programId: CONTROL_PROGRAM_ID,
     keys: [
-      { pubkey: user,                  isSigner: true,  isWritable: true  },
-      { pubkey: config,                isSigner: false, isWritable: false },
-      { pubkey: curve,                 isSigner: false, isWritable: true  },
-      { pubkey: mint,                  isSigner: false, isWritable: false },
-      { pubkey: vaultAta,              isSigner: false, isWritable: true  },
-      { pubkey: userAta,               isSigner: false, isWritable: true  },
-      { pubkey: creatorFeeVault,       isSigner: false, isWritable: true  },
-      { pubkey: protocolFeeWallet,     isSigner: false, isWritable: true  },
-      { pubkey: lpEscrow,              isSigner: false, isWritable: true  },
-      { pubkey: communityPool,         isSigner: false, isWritable: true  },
-      { pubkey: TOKEN_2022_PROGRAM_ID, isSigner: false, isWritable: false },
-      { pubkey: eventAuthority,        isSigner: false, isWritable: false },
-      { pubkey: CONTROL_PROGRAM_ID,    isSigner: false, isWritable: false },
+      { pubkey: user,                       isSigner: true,  isWritable: true  },
+      { pubkey: config,                     isSigner: false, isWritable: false },
+      { pubkey: curve,                      isSigner: false, isWritable: true  },
+      { pubkey: mint,                       isSigner: false, isWritable: false },
+      { pubkey: curveState.vaultAta,        isSigner: false, isWritable: true  },
+      { pubkey: userAta,                    isSigner: false, isWritable: true  },
+      { pubkey: curveState.creatorFeeVault, isSigner: false, isWritable: true  },
+      { pubkey: protocolFeeWallet,          isSigner: false, isWritable: true  },
+      { pubkey: curveState.lpEscrow,        isSigner: false, isWritable: true  },
+      { pubkey: communityPool,              isSigner: false, isWritable: true  },
+      { pubkey: TOKEN_2022_PROGRAM_ID,      isSigner: false, isWritable: false },
+      { pubkey: eventAuthority,             isSigner: false, isWritable: false },
+      { pubkey: CONTROL_PROGRAM_ID,         isSigner: false, isWritable: false },
     ],
     data: encodeSellData(tokenAmount, minSolOut),
   });
@@ -572,31 +564,54 @@ export async function buildSellTx(params: {
 
 > **Do not call `Sell` after graduation.** Once the curve migrates to Meteora DAMM v2 the curve account is closed and the program reverts. Detect `is_completed === 1` on the curve account (or a missing curve account) and route through Meteora DAMM v2 instead.
 
-### 3. Read the curve account for live quotes
+### 3. Read on-chain state (curve + config)
 
-The `curve` account is a 344-byte `repr(C, packed)` struct. Decode the four reserve fields plus `is_completed` / `required_liquidity` and feed them straight into the constant-product formula from [Bonding curve math](#bonding-curve-math). Read this account *before every quote* — virtual reserves are constant per-mint, but real reserves shift on every trade.
+The `curve` account is a 344-byte `repr(C, packed)` struct. The four reserve fields plus `required_liquidity` / `is_completed` / `is_frozen` drive the AMM math; `creator`, `vault_ata`, `lp_escrow`, and `creator_fee_vault` are **pre-derived inside the curve** so reading the curve once gives an integrator every per-mint address they need to build a Buy or Sell — no `findProgramAddressSync` calls, no out-of-band knowledge of the creator pubkey. Read this account *before every quote* — virtual reserves are constant per-mint, but real reserves shift on every trade.
+
+The `config` account (80 bytes, `repr(C, packed)`) holds the program-wide protocol fee wallet plus the four base fee bps values. Read it once (or cache it across trades) to obtain `protocolFeeWallet` for the trade instruction account list.
 
 ```ts
 import { Connection, PublicKey } from '@solana/web3.js';
-import { deriveCurve } from './pdas';
+import { deriveConfig, deriveCurve } from './pdas';
 
-// Field offsets inside the 344-byte ControlCurve account (repr(C, packed)).
-const OFFSET_VIRTUAL_SOL    = 64;
-const OFFSET_VIRTUAL_TOKEN  = 72;
-const OFFSET_REAL_SOL       = 80;
-const OFFSET_REAL_TOKEN     = 88;
-const OFFSET_REQUIRED_LIQ   = 112;
-const OFFSET_IS_COMPLETED   = 120;
-const OFFSET_IS_FROZEN      = 122;
+// All offsets are relative to the 344-byte ControlCurve struct (repr(C, packed)).
+const OFFSET_MINT                     = 0;     // pubkey (32)
+const OFFSET_AUTHORITY                = 32;    // pubkey (32) — admin co-signer; rarely needed by integrators
+const OFFSET_VIRTUAL_SOL              = 64;
+const OFFSET_VIRTUAL_TOKEN            = 72;
+const OFFSET_REAL_SOL                 = 80;
+const OFFSET_REAL_TOKEN               = 88;
+const OFFSET_INITIAL_TOKEN_RESERVE    = 96;
+const OFFSET_TOTAL_SUPPLY             = 104;
+const OFFSET_REQUIRED_LIQ             = 112;
+const OFFSET_IS_COMPLETED             = 120;
+const OFFSET_BUMP                     = 121;   // u8 (curve PDA bump)
+const OFFSET_IS_FROZEN                = 122;
+// 123..144: pad + created_at + max_user_tokens — not exposed
+const OFFSET_VAULT_ATA                = 144;   // pubkey (32) — pre-derived
+const OFFSET_CREATOR                  = 176;   // pubkey (32) — token creator (NOT the same as authority @ 32)
+const OFFSET_LP_ESCROW                = 208;   // pubkey (32) — pre-derived
+const OFFSET_EXTRA_COMMUNITY_FEE_BPS  = 240;   // u16 LE
+// 242..312: pad + meteora_pool + position_nft_mint — only set after graduation
+const OFFSET_CREATOR_FEE_VAULT        = 312;   // pubkey (32) — pre-derived
 
 export interface CurveState {
+  mint: PublicKey;
+  creator: PublicKey;
+  vaultAta: PublicKey;
+  lpEscrow: PublicKey;
+  creatorFeeVault: PublicKey;
+  bump: number;
   virtualSolReserve: bigint;
   virtualTokenReserve: bigint;
   realSolReserve: bigint;
   realTokenReserve: bigint;
-  requiredLiquidity: bigint;   // graduation threshold (lamports)
-  isCompleted: boolean;        // true once migrated to Meteora DAMM v2
-  isFrozen: boolean;           // true while migration is in flight
+  initialTokenReserve: bigint;
+  totalSupply: bigint;
+  requiredLiquidity: bigint;        // graduation threshold (lamports)
+  extraCommunityFeeBps: number;     // u16; addon to config.community_fee_bps
+  isCompleted: boolean;             // true once migrated to Meteora DAMM v2
+  isFrozen: boolean;                // true while migration is in flight
 }
 
 export async function readCurveState(
@@ -608,24 +623,57 @@ export async function readCurveState(
 
   const data = info.data;
   return {
-    virtualSolReserve:   data.readBigUInt64LE(OFFSET_VIRTUAL_SOL),
-    virtualTokenReserve: data.readBigUInt64LE(OFFSET_VIRTUAL_TOKEN),
-    realSolReserve:      data.readBigUInt64LE(OFFSET_REAL_SOL),
-    realTokenReserve:    data.readBigUInt64LE(OFFSET_REAL_TOKEN),
-    requiredLiquidity:   data.readBigUInt64LE(OFFSET_REQUIRED_LIQ),
-    isCompleted: data[OFFSET_IS_COMPLETED] === 1,
-    isFrozen:    data[OFFSET_IS_FROZEN]    === 1,
+    mint:                 new PublicKey(data.slice(OFFSET_MINT, OFFSET_MINT + 32)),
+    creator:              new PublicKey(data.slice(OFFSET_CREATOR, OFFSET_CREATOR + 32)),
+    vaultAta:             new PublicKey(data.slice(OFFSET_VAULT_ATA, OFFSET_VAULT_ATA + 32)),
+    lpEscrow:             new PublicKey(data.slice(OFFSET_LP_ESCROW, OFFSET_LP_ESCROW + 32)),
+    creatorFeeVault:      new PublicKey(data.slice(OFFSET_CREATOR_FEE_VAULT, OFFSET_CREATOR_FEE_VAULT + 32)),
+    bump:                 data[OFFSET_BUMP],
+    virtualSolReserve:    data.readBigUInt64LE(OFFSET_VIRTUAL_SOL),
+    virtualTokenReserve:  data.readBigUInt64LE(OFFSET_VIRTUAL_TOKEN),
+    realSolReserve:       data.readBigUInt64LE(OFFSET_REAL_SOL),
+    realTokenReserve:     data.readBigUInt64LE(OFFSET_REAL_TOKEN),
+    initialTokenReserve:  data.readBigUInt64LE(OFFSET_INITIAL_TOKEN_RESERVE),
+    totalSupply:          data.readBigUInt64LE(OFFSET_TOTAL_SUPPLY),
+    requiredLiquidity:    data.readBigUInt64LE(OFFSET_REQUIRED_LIQ),
+    extraCommunityFeeBps: data.readUInt16LE(OFFSET_EXTRA_COMMUNITY_FEE_BPS),
+    isCompleted:          data[OFFSET_IS_COMPLETED] === 1,
+    isFrozen:             data[OFFSET_IS_FROZEN]    === 1,
   };
 }
 
-// Constant-product quote with the 3% trading fee already taken on the input side.
-const FEE_BPS = 300n;            // 0.15 + 0.60 + 0.25 + 1.00 + 1.00 (community + extra) = 3%
+// ControlConfig layout (80 bytes, repr(C, packed)):
+//   0..32   admin                (pubkey)
+//   32..64  protocol_fee_wallet  (pubkey)   ← what integrators need for Buy/Sell
+//   64..66  creator_fee_bps      (u16 LE)   = 15  → 0.15%
+//   66..68  protocol_fee_bps     (u16 LE)   = 60  → 0.60%
+//   68..70  lp_fee_bps           (u16 LE)   = 25  → 0.25%
+//   70..72  community_fee_bps    (u16 LE)   = 100 → 1.00%
+//   72..80  create_fee           (u64 LE)
+const OFFSET_PROTOCOL_FEE_WALLET = 32;
+
+export async function readProtocolFeeWallet(connection: Connection): Promise<PublicKey> {
+  const info = await connection.getAccountInfo(deriveConfig());
+  if (!info) throw new Error('Control config PDA not found — wrong cluster?');
+  return new PublicKey(info.data.slice(OFFSET_PROTOCOL_FEE_WALLET, OFFSET_PROTOCOL_FEE_WALLET + 32));
+}
+
+// Constant-product quote with the per-mint trading fee taken on the input side.
+// Total fee bps = config base (200) + curve.extra_community_fee_bps. The 200 base
+// breaks down as creator(15) + protocol(60) + lp(25) + community_base(100); the
+// extra slice routes to the same per-token community pool.
+const FIXED_FEE_BPS = 200n;
 const BPS_DENOM = 10_000n;
+
+function totalFeeBps(state: CurveState): bigint {
+  return FIXED_FEE_BPS + BigInt(state.extraCommunityFeeBps);
+}
 
 export function quoteBuy(state: CurveState, solInLamports: bigint): bigint {
   const totalSol   = state.virtualSolReserve   + state.realSolReserve;
   const totalToken = state.virtualTokenReserve + state.realTokenReserve;
-  const netIn = solInLamports - (solInLamports * FEE_BPS) / BPS_DENOM;
+  const fee = (solInLamports * totalFeeBps(state)) / BPS_DENOM;
+  const netIn = solInLamports - fee;
   return (totalToken * netIn) / (totalSol + netIn);
 }
 
@@ -633,11 +681,11 @@ export function quoteSell(state: CurveState, tokenIn: bigint): bigint {
   const totalSol   = state.virtualSolReserve   + state.realSolReserve;
   const totalToken = state.virtualTokenReserve + state.realTokenReserve;
   const grossOut = (totalSol * tokenIn) / (totalToken + tokenIn);
-  return grossOut - (grossOut * FEE_BPS) / BPS_DENOM;
+  return grossOut - (grossOut * totalFeeBps(state)) / BPS_DENOM;
 }
 ```
 
-> **Per-token fees.** The `extra_community_fee_bps` field (offset `240`, `u16 LE`) on the curve adds to the base community fee. Configurable per mint at creation; clamp the total trading fee at quote time if you want exact lamport accounting. The 3% constant above covers the default config — read `extra_community_fee_bps` when the integrator needs precise per-mint slippage.
+> **Why read both accounts?** The curve hands you `creator`, `vaultAta`, `lpEscrow`, and `creatorFeeVault` pre-derived — no need to call `findProgramAddressSync` for any of them, and no need to learn the creator pubkey out-of-band. The config hands you `protocolFeeWallet`. Together they cover every per-mint and program-wide address a `Buy` or `Sell` needs.
 
 ### 4. Decode the on-chain TradeEvent
 

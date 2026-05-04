@@ -7,13 +7,16 @@ For the Buy/Sell wire format and TypeScript examples, see the [Integration Guide
 ## Table of contents
 
 1. [Reference signatures](#reference-signatures)
-2. [Parsing the Create transaction](#parsing-the-create-transaction)
+2. [Test mints](#test-mints)
+3. [Parsing the Create transaction](#parsing-the-create-transaction)
 
 ---
 
 ## Reference signatures
 
 These are real, successful transactions for each instruction Control exposes today. They are produced by the program author for reference — use them to verify your decoder's account ordering, discriminator, and inner-instruction TradeEvent shape against ground-truth on-chain data.
+
+> The **Discriminator** column shows the legacy 1-byte form alongside the 8-byte Anchor form for human reference. Every sample transaction linked here was actually signed with the **8-byte Anchor form** (`sha256("global:<name>")[..8]`); raw decoded `instruction.data` will start with the 8-byte prefix, not the legacy single byte. Both forms work on-chain; the dispatcher routes them to the same handler.
 
 ### Devnet
 
@@ -34,6 +37,20 @@ These are real, successful transactions for each instruction Control exposes tod
 > **Same wire format on both networks.** Mainnet and Devnet share the Program ID `CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27` and the identical post-May-2026 layout: **14-account Buy / 13-account Sell**, dual-mode discriminator dispatch (legacy 1-byte or 8-byte Anchor-style), and the self-CPI `TradeEvent` emitted as an inner instruction on every trade. The same client code works against either network — pick the cluster via your RPC endpoint, no code changes required.
 
 > **Current as of May 2026 — live on both Mainnet and Devnet.** All six sample signatures above were produced with the 8-byte Anchor-style discriminator and carry the event log under the new account layout. To decode the event payload (exact `solAmount`, `tokenAmount`, fees, post-trade reserves) walk `tx.meta.innerInstructions` — see [`parseTradeEvents`](./INTEGRATION.md#4-decode-the-on-chain-tradeevent) in the Integration Guide. Treat the entries above as ground truth for the **account layout, both discriminator forms, and event log shape**.
+
+---
+
+## Test mints
+
+Canonical mints used by the sample transactions above and by integration tests. Hand any of these to [`readCurveState`](./INTEGRATION.md#3-read-on-chain-state-curve--config) and the rest of the [Integration Guide](./INTEGRATION.md#typescript-examples) to walk through a full Buy/Sell round-trip without producing your own mint.
+
+| Network | Mint | Notes |
+|---|---|---|
+| Devnet (canonical) | `6XyiLwNWGwkuWunt2XX7uiMfJJDgw8wdeowVnPxmizRe` | Created with `required_liquidity = 10,000 SOL` so it stays pre-graduation across long-running test runs. Use this for any new integration work. |
+| Devnet (legacy) | `8poC3bFzLNZPuzvSRNiuEDACsW5Ymtw7HNKWX55JgavW` | Mint backing the Devnet Create / Buy / Sell sample signatures linked above. |
+| Mainnet | `2awKV3D3r8T6jLKsyHTzjsG2hMtNbsW2vL4gfGsTVXsw` | Mint backing the Mainnet Create / Buy / Sell sample signatures linked above. |
+
+> Need a fresh devnet mint with custom reserves or a non-default `required_liquidity`? Email <cb@print.world>.
 
 ---
 

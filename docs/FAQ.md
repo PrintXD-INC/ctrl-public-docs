@@ -19,7 +19,7 @@ Read the `curve` PDA (`[b"control-curve", mint]`) before each trade and check ei
 - `curve.is_completed === 1` — the curve has migrated.
 - `getAccountInfo(curve)` returns `null` — the curve account has been closed.
 
-If either is true, route the trade through **Meteora DAMM v2** instead of Control. See [Graduation](./INTEGRATION.md#graduation) and the [`readCurveState`](./INTEGRATION.md#3-read-the-curve-account-for-live-quotes) example.
+If either is true, route the trade through **Meteora DAMM v2** instead of Control. See [Graduation](./INTEGRATION.md#graduation) and the [`readCurveState`](./INTEGRATION.md#3-read-on-chain-state-curve--config) example.
 
 `curve.is_frozen === 1` indicates the admin has paused trading on this curve (typically while a migration is in flight). Treat it the same as graduated for routing purposes — `Buy`/`Sell` will revert.
 
@@ -27,22 +27,23 @@ If either is true, route the trade through **Meteora DAMM v2** instead of Contro
 
 It is **per-token**, stored on-chain as `curve.required_liquidity` (in lamports). Read the curve account at quote time — don't hard-code a value.
 
-Defaults observed today:
+Program constants (same on both networks):
 
-- **Devnet:** `0.5 SOL` (`HARDCAP_REQUIRED_LIQUIDITY = 500_000_000` lamports).
-- **Mainnet:** `~95 SOL`; the per-token value is set by the program admin at curve creation.
+- **Default:** `95 SOL` (`HARDCAP_REQUIRED_LIQUIDITY = 95_000_000_000` lamports). This is what new curves get unless overridden.
+- **Bounds:** `0.1 SOL ≤ required_liquidity ≤ 10,000 SOL` (`MIN_REQUIRED_LIQUIDITY` / `MAX_REQUIRED_LIQUIDITY`).
+- **Per-token override:** set by the program admin at curve creation. Devnet test mints are commonly created with `10,000 SOL` to prevent mid-test graduation.
 
 ## How do I implement slippage protection?
 
 Pass a non-zero `min_tokens_out` (Buy) or `min_sol_out` (Sell) when building the instruction. The on-chain program enforces these thresholds and reverts the transaction if the curve cannot deliver. The 3% trading fee is taken from the input — see [Fee structure](./INTEGRATION.md#fee-structure).
 
-Compute the floor from a fresh quote ([`readCurveState`](./INTEGRATION.md#3-read-the-curve-account-for-live-quotes)) and apply your slippage tolerance (e.g. 0.5%) on top.
+Compute the floor from a fresh quote ([`readCurveState`](./INTEGRATION.md#3-read-on-chain-state-curve--config)) and apply your slippage tolerance (e.g. 0.5%) on top.
 
-## Why is the IDL `args` block empty for every instruction?
+## Are the IDL `args` blocks populated?
 
-Control runs on **Pinocchio**, which parses instruction data manually with `bytemuck`. There is no derive macro, so the IDL generator cannot introspect arg layouts — only the `events` and `types` blocks are populated for parsing. This is a permanent design decision, not a pending update.
+**Yes — populated for every instruction.** Pinocchio parses instruction data manually with `bytemuck` (no derive macro), so a raw shank IDL cannot introspect arg layouts. The published IDL solves this with a post-processor (`scripts/augment_idl.ts` in the on-chain program repo) that hand-rolls the args for each instruction so explorers and Anchor SDKs can decode them. `buy` declares `sol_amount: u64, min_tokens_out: u64`; `sell` declares `amount: u64, min_sol_out: u64` (the IDL uses `amount` as the field name; the [Integration Guide](./INTEGRATION.md#sell) writes it as `token_amount` in prose because it's the more descriptive label — same wire bytes either way).
 
-The wire format for `Buy` and `Sell` (both 1-byte and 8-byte discriminator forms, plus the args layout) is documented in the [Integration Guide](./INTEGRATION.md#buy). You don't need any other instructions to integrate.
+The full wire format for `Buy` and `Sell` (both 1-byte and 8-byte discriminator forms, plus the args layout) is documented in the [Integration Guide](./INTEGRATION.md#buy). You don't need any other instructions to integrate.
 
 ## Where do I find the canonical IDL?
 
