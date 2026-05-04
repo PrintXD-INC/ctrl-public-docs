@@ -14,12 +14,9 @@ The program binary is identical on both networks. Pick the network via your RPC 
 
 ## How do I detect that a token has graduated?
 
-Read the `curve` PDA (`[b"control-curve", mint]`) before each trade and check either of:
+Read the `curve` PDA (`[b"control-curve", mint]`) before each trade and check `curve.is_completed === 1`. If the flag is set, the curve has migrated and you should route the trade through **Meteora DAMM v2** instead of Control. See [Graduation](./INTEGRATION.md#graduation) and the [`readCurveState`](./INTEGRATION.md#3-read-on-chain-state-curve--config) example.
 
-- `curve.is_completed === 1` — the curve has migrated.
-- `getAccountInfo(curve)` returns `null` — the curve account has been closed.
-
-If either is true, route the trade through **Meteora DAMM v2** instead of Control. See [Graduation](./INTEGRATION.md#graduation) and the [`readCurveState`](./INTEGRATION.md#3-read-on-chain-state-curve--config) example.
+The curve account itself stays on chain forever — it's frozen and drained at migration time, never closed — so don't treat a `null` `getAccountInfo` response as a graduation signal. A null account means the mint was never launched on Control (or you're querying the wrong cluster), not that it graduated.
 
 `curve.is_frozen === 1` indicates the admin has paused trading on this curve (typically while a migration is in flight). Treat it the same as graduated for routing purposes — `Buy`/`Sell` will revert.
 

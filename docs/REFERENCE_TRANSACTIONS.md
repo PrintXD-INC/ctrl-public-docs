@@ -48,7 +48,9 @@ Canonical mints used by the sample transactions above and by integration tests. 
 |---|---|---|
 | Devnet (canonical) | `6XyiLwNWGwkuWunt2XX7uiMfJJDgw8wdeowVnPxmizRe` | Created with `required_liquidity = 10,000 SOL` so it stays pre-graduation across long-running test runs. Use this for any new integration work. |
 | Devnet (legacy) | `8poC3bFzLNZPuzvSRNiuEDACsW5Ymtw7HNKWX55JgavW` | Mint backing the Devnet Create / Buy / Sell sample signatures linked above. |
-| Mainnet | `2awKV3D3r8T6jLKsyHTzjsG2hMtNbsW2vL4gfGsTVXsw` | Mint backing the Mainnet Create / Buy / Sell sample signatures linked above. |
+| Mainnet (1,000 SOL graduation threshold) | `2awKV3D3r8T6jLKsyHTzjsG2hMtNbsW2vL4gfGsTVXsw` | Mint backing the Mainnet Create / Buy / Sell sample signatures linked above. Created with `required_liquidity = 1,000 SOL` to keep it pre-graduation across long-running test runs. |
+
+> **Test-mint parameters are non-default by design.** These mints are provisioned specifically so external integrators can run extensive tests without the curve graduating mid-session. They were created with non-default `required_liquidity` (1,000 / 10,000 SOL instead of the standard 95 SOL) and a correspondingly larger `virtual_sol_reserve`. **Tokens launched on Control in real production will use the standard defaults** (95 SOL threshold and the matching virtual reserves) — your client code should always read these values per-mint from the curve account (see [§10.3 Read on-chain state](./INTEGRATION.md#3-read-on-chain-state-curve--config)) and not hardcode any number from this section.
 
 > Need a fresh devnet mint with custom reserves or a non-default `required_liquidity`? Email <cb@print.world>.
 

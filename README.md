@@ -25,7 +25,7 @@ This first release documents only the two instructions an external integrator ne
 
 The Control program ships **40 instructions** in total. Everything else (token creation, admin, migration, post-migration distribution, buyback engine, daily jackpot, IDL upload) is internal and **integrators do not need to call it**. The full set is enumerated in the on-chain IDL at [`idl/control.json`](./idl/control.json).
 
-> **Graduation safety.** Once a curve fills its `required_liquidity` threshold, Control automatically migrates the token to a Meteora DAMM v2 pool, the curve account is closed, and further `Buy`/`Sell` calls revert. Detect graduation client-side (`curve.is_completed === 1` or curve account missing) and re-route to Meteora DAMM v2 from that point on. See [Graduation](./docs/INTEGRATION.md#graduation).
+> **Graduation safety.** Once a curve fills its `required_liquidity` threshold, Control automatically migrates the token to a Meteora DAMM v2 pool: the program freezes and drains the curve, sets `is_completed = 1`, and reverts any further `Buy`/`Sell` calls. The curve account itself stays on chain — it is never closed. Detect graduation client-side via `curve.is_completed === 1` and re-route to Meteora DAMM v2 from that point on. See [Graduation](./docs/INTEGRATION.md#graduation).
 
 ## Documentation
 

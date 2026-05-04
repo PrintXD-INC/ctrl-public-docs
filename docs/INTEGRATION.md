@@ -263,7 +263,7 @@ Sell takes **13 accounts** — the first 10 match [Buy](#buy)'s first 10 exactly
    1   +          8            +           8           = 17 bytes
 ```
 
-> **Do not call `Sell` after graduation.** Once the curve has migrated to Meteora DAMM v2, the curve account is closed and the program will revert. Check `curve.is_completed === 1` before routing, or detect the missing curve account and fall back to Meteora DAMM v2.
+> **Do not call `Sell` after graduation.** Once the curve migrates to Meteora DAMM v2 the program freezes and drains the curve, sets `is_completed = 1`, and reverts any further Buy/Sell. The curve account itself stays on chain — it is never closed — so detect graduation via `is_completed === 1` on the curve account and route through Meteora DAMM v2 instead.
 
 ---
 
@@ -335,7 +335,7 @@ Graduation is automatic and atomic: the Control program seeds a Meteora pool wit
 - The token continues life as a regular Meteora DAMM v2 position.
 - Route subsequent trades through Meteora or any aggregator that supports it.
 
-> **Detect graduation before each trade.** A robust integration reads the `curve` account and checks `is_completed` (or detects the account is closed), then falls back to Meteora DAMM v2. Also check `is_frozen` — the admin can pause trading on a curve.
+> **Detect graduation before each trade.** A robust integration reads the `curve` account and checks `is_completed`; if the flag is `1`, route via Meteora DAMM v2. The curve account stays on chain forever — it's frozen and drained at migration time, never closed — so don't code for a "missing curve" branch; that state never occurs. Also check `is_frozen` — the admin can pause trading on a curve.
 
 ---
 
@@ -397,7 +397,7 @@ export async function buildBuyTx(params: {
   //    pre-derived; the config gives us the protocol fee wallet. Two RPC calls (or one if
   //    the caller pre-fetched protocolFeeWallet).
   const curveState = await readCurveState(connection, mint);
-  if (!curveState)             throw new Error('Curve account missing — already graduated, route to Meteora DAMM v2');
+  if (!curveState)             throw new Error('Curve PDA not found — wrong cluster, or this mint was not launched on Control');
   if (curveState.isCompleted)  throw new Error('Curve has graduated — route to Meteora DAMM v2');
   if (curveState.isFrozen)     throw new Error('Curve is frozen (migration in flight) — retry shortly');
 
@@ -529,7 +529,7 @@ export async function buildSellTx(params: {
   // 1. Read on-chain state. Same pattern as Buy: curve gives us the per-mint addresses
   //    pre-derived; config gives us the protocol fee wallet.
   const curveState = await readCurveState(connection, mint);
-  if (!curveState)             throw new Error('Curve account missing — already graduated, route to Meteora DAMM v2');
+  if (!curveState)             throw new Error('Curve PDA not found — wrong cluster, or this mint was not launched on Control');
   if (curveState.isCompleted)  throw new Error('Curve has graduated — route to Meteora DAMM v2');
   if (curveState.isFrozen)     throw new Error('Curve is frozen (migration in flight) — retry shortly');
 
@@ -575,7 +575,7 @@ export async function buildSellTx(params: {
 }
 ```
 
-> **Do not call `Sell` after graduation.** Once the curve migrates to Meteora DAMM v2 the curve account is closed and the program reverts. Detect `is_completed === 1` on the curve account (or a missing curve account) and route through Meteora DAMM v2 instead.
+> **Do not call `Sell` after graduation.** Once the curve migrates to Meteora DAMM v2 the program freezes and drains the curve, sets `is_completed = 1`, and reverts any further Buy/Sell. The curve account itself stays on chain — it is never closed — so detect graduation via `is_completed === 1` on the curve account and route through Meteora DAMM v2 instead.
 
 ### 3. Read on-chain state (curve + config)
 
@@ -632,7 +632,7 @@ export async function readCurveState(
   mint: PublicKey,
 ): Promise<CurveState | null> {
   const info = await connection.getAccountInfo(deriveCurve(mint));
-  if (!info) return null; // closed → already graduated, route to Meteora DAMM v2
+  if (!info) return null; // account doesn't exist (wrong cluster or mint never launched on Control) — not a graduation signal; the curve PDA stays on chain even after graduation
 
   const data = info.data;
   return {
