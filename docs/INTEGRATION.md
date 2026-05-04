@@ -93,6 +93,8 @@ The program's trading state is keyed by the token `mint`. Once you know the mint
 
 > **Token-2022 ATAs.** Pass the Token-2022 program ID, not the legacy SPL Token program. The `vaultAta` uses `allowOwnerOffCurve = true` because `curve` is a PDA, not a keypair.
 
+> **Budget for ATA rent.** The first time a wallet ever buys a given Control mint, the Buy transaction also pays **~2,039,280 lamports (~0.002 SOL)** of rent to allocate the user's Token-2022 ATA via the idempotent `createAssociatedTokenAccountIdempotentInstruction` in the same tx. Subsequent Buys reuse the existing ATA and don't pay rent. Bots and aggregators with tight per-trade SOL budgets should account for this on the first trade.
+
 ### Reference implementation
 
 ```ts
@@ -466,6 +468,17 @@ async function example() {
 
   const sig = await sendAndConfirmTransaction(connection, tx, [user]);
   console.log('Buy landed:', sig);
+
+  // Verify the resulting balance. Pass TOKEN_2022_PROGRAM_ID as the 4th arg —
+  // the SPL-token default program would reject a Token-2022 account.
+  const { getAccount } = await import('@solana/spl-token');
+  const userAta = getAssociatedTokenAddressSync(
+    new PublicKey('<CONTROL_TOKEN_MINT>'), user.publicKey, false, TOKEN_2022_PROGRAM_ID,
+  );
+  const ataState = await getAccount(
+    connection, userAta, 'confirmed', TOKEN_2022_PROGRAM_ID, // ← critical 4th arg
+  );
+  console.log('Tokens received:', ataState.amount.toString());
 }
 ```
 
@@ -708,8 +721,17 @@ Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruc
 145..153 solToUser            u64 LE (Sell only — net SOL credited to the seller)
 ```
 
+> **`solAmount` means different things on Buy vs Sell.** The instruction's `sol_amount` arg is what the user supplies as input; the event's `solAmount` field is what entered or left the AMM curve after fee accounting. They are NOT the same:
+>
+> - **Buy**: `event.solAmount = arg.sol_amount − event.fee` (post-fee, what entered the curve). On a 0.01 SOL Buy with the default 3.00% fee: `arg = 10_000_000`, `event.fee = 300_000`, `event.solAmount = 9_700_000`.
+> - **Sell**: `event.solAmount` is the gross AMM output BEFORE fees. The user actually receives `event.solToUser = event.solAmount − event.fee`. Example Sell: `event.solAmount = 4_850_001`, `event.fee = 145_500`, `event.solToUser = 4_704_501` (= wallet credit).
+>
+> Reconcile slippage UX against `event.solAmount` for Buy and `event.solToUser` for Sell. Neither equals the instruction arg directly.
+
 ```ts
 import { Connection, PublicKey } from '@solana/web3.js';
+// Tested with @solana/web3.js@1.x, @solana/spl-token@0.4.x, bs58@5+ (default-export style).
+// On bs58@4 swap to: import * as bs58 from 'bs58';
 import bs58 from 'bs58';
 import { CONTROL_PROGRAM_ID } from './pdas';
 
