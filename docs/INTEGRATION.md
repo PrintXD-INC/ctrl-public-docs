@@ -302,7 +302,7 @@ sol_out     = (total_sol * token_in) / (total_token + token_in)
 
 ## Fee structure
 
-Default total: 3.00% per trade — five slices going to four destinations (community base + extra both land in `communityPool`). Per-token mints can shift the total via `curve.extra_community_fee_bps`.
+A 3.00% default total is split into five slices going to four destinations (community base + extra both land in `communityPool`). Per-token mints can shift the total via `curve.extra_community_fee_bps`.
 
 | Slice | Rate | Destination | Source | Purpose |
 |---|---|---|---|---|
@@ -708,7 +708,7 @@ Every `Buy` and `Sell` emits an Anchor self-CPI `TradeEvent` as an inner instruc
 0..8     ANCHOR_LOG_DISC      sha256("anchor:event")[..8]   = [228, 69,165, 46, 81,203,154, 29]
 8..16    TRADE_EVENT_DISC     sha256("event:TradeEvent")[..8] = [189,219,127,211, 78,230, 97,238]
 16..48   mint                 pubkey (32)
-48..56   solAmount            u64 LE (Buy: post-fee net into AMM. Sell: pre-fee gross out of AMM. See callout below.)
+48..56   solAmount            u64 LE  Buy: post-fee net into AMM. Sell: pre-fee gross out of AMM. See callout below.
 56..64   tokenAmount          u64 LE (raw base units moved)
 64..65   isBuy                u8     (1 = Buy, 0 = Sell)
 65..97   user                 pubkey (32)
