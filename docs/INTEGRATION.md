@@ -182,6 +182,8 @@ Swap SOL for tokens on the bonding curve.
 
 > **Breaking change — May 2026.** Every `Buy` now mandatorily emits an Anchor self-CPI `TradeEvent` for explorer + indexer compatibility. Clients **must** include two extra accounts at the end of the account list (slots 12 and 13 — `eventAuthority` + `program`). Old callers that send 12 accounts will fail with `NotEnoughAccountKeys`. The upgrade is live on **both Mainnet and Devnet** as of May 2026.
 
+> **Trade sizing.** Any trade size from **1 lamport** upward works on any Control mint, including the very first trade on a freshly created token — there is no minimum trade size. Prior to May 2026 a sub-~0.05 SOL first trade could fail with `insufficient funds for rent` because the community-fee slice was below the system-program rent-exempt minimum and would have lazy-created the community-pool PDA below rent. The contract now pre-allocates the community pool at `CreateToken` time (see [Parsing the Create transaction](./REFERENCE_TRANSACTIONS.md#parsing-the-create-transaction) — Create is now **13 accounts**, was 12), so this no longer happens.
+
 > **Dual-mode discriminator.** The on-chain dispatcher accepts both forms: the legacy 1-byte disc (`0x02`) or the 8-byte Anchor-style disc (`sha256("global:buy")[..8]` = `[102, 6, 61, 18, 1, 218, 235, 234]`). Old clients keep working; Anchor SDK clients get IDL-driven decode for free. Solscan / SolanaFM render the swap as `Buy` because they recognize the 8-byte form. The TS examples below use the 1-byte form for brevity — to switch to Anchor-style, replace the leading byte with the 8-byte buffer; everything else (accounts, fields, behavior) is identical.
 
 ### Args (little-endian primitives, in order after the discriminant byte)

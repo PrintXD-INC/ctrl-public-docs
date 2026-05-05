@@ -22,11 +22,13 @@ These are real, successful transactions for each instruction Control exposes tod
 
 | Instruction | Discriminator | Signature |
 |---|---|---|
-| Create | `0x09` (legacy) / `[84, 52, 204, 228, 24, 140, 234, 75]` (Anchor) | [`qNUbbvq2vf…hZh6pDfJ`](https://solscan.io/tx/qNUbbvq2vfJBPieUKztMWcJ31kgJPZiD9iHSBmpGLBPcPnxyEdPYMKh6TU3127i1x1CLSZgZPDPB3FQhZh6pDfJ?cluster=devnet) |
-| Buy | `0x02` (legacy) / `[102, 6, 61, 18, 1, 218, 235, 234]` (Anchor) | [`2XMdkUgaaY…ZGjkJNiaGStv`](https://solscan.io/tx/2XMdkUgaaY9mbTT4jKefZLFTP3bUfCqSEUU9kPHKoDzwa6zx9k9GRregdALKCdge6aw2Qexh2q72ZGjkJNiaGStv?cluster=devnet) |
-| Sell | `0x03` (legacy) / `[51, 230, 133, 164, 1, 127, 131, 173]` (Anchor) | [`5Bn3Wijq8R…CJTbvr7cE`](https://solscan.io/tx/5Bn3Wijq8RRqfNYjfSFSEVb1BqP9eWQouNZJRS547WVzatiFQw5hhgphvvkrbeAqP64itLLFeBCjWFcCJTbvr7cE?cluster=devnet) |
+| Create | `0x09` (legacy) / `[84, 52, 204, 228, 24, 140, 234, 75]` (Anchor) | [`2b3z7kX2C7…WxE6zTb`](https://solscan.io/tx/2b3z7kX2C7bUXoArwRbR1QfCmBzRnNVGX9ZKCYwJi7exGhiPdxaJpvftHhyvP7oXiHCK89nL3fLxQhxRwVxE6zTb?cluster=devnet) |
+| Buy | `0x02` (legacy) / `[102, 6, 61, 18, 1, 218, 235, 234]` (Anchor) | [`3mW4Tryyuu…isqsZCs`](https://solscan.io/tx/3mW4Tryyuu9A3j6Cv1VZHaEVFSz4wKzCu9FZANwc8wrt9gSqAGy8ZUEDwzzc6pEw4GGB6Gk35Tw9ToC1pisqsZCs?cluster=devnet) |
+| Sell | `0x03` (legacy) / `[51, 230, 133, 164, 1, 127, 131, 173]` (Anchor) | [`3FX69LidfP…oU1YRgK`](https://solscan.io/tx/3FX69LidfPP3cju63pojKLBuPrtuTDC3gDatC2wNgfSSYkAkDjB7EwDfqHTx3ryrRmNd8LAjRW89ioGUGoU1YRgK?cluster=devnet) |
 
 ### Mainnet
+
+> **Mainnet rows below are pre-redeploy.** The Devnet sample sigs above are from the post-May-2026 contract update that pre-allocates the community-pool PDA at `CreateToken` time (see [Parsing the Create transaction](#parsing-the-create-transaction) below — Create is now **13 accounts**, was 12). The Mainnet contract redeploy with the same change is rolling out next; until it lands, the Mainnet sample sigs in the table reflect the prior 12-account `CreateToken` layout. Buy and Sell are unchanged on both networks (still 14 / 13 accounts).
 
 | Instruction | Discriminator | Signature |
 |---|---|---|
@@ -66,21 +68,23 @@ To detect new launches in real time. Each Create tx introduces a brand-new bondi
 
 ### Discriminator
 
-`CreateToken` is dispatched by either form:
+`CreateToken` is dispatched by either form. The **8-byte Anchor sighash is canonical** — it is what the IDL declares, what every shipped client sends, and what Solscan / SolanaFM / Anchor SDK decode against:
 
-- **Legacy 1-byte:** `0x09` (decimal `9`) as the leading byte of instruction data.
-- **Anchor-style 8-byte:** `[84, 52, 204, 228, 24, 140, 234, 75]` (= `sha256("global:create_token")[..8]`).
+- **Anchor-style 8-byte (canonical):** `[84, 52, 204, 228, 24, 140, 234, 75]` (= `sha256("global:create_token")[..8]`). The leading byte is `0x54`, **NOT** `0x09` — indexers that filter only on `data[0] == 0x09` will silently miss every Create submitted by an Anchor SDK client.
+- **Legacy 1-byte:** `0x09` (decimal `9`) as the leading byte of instruction data. Still accepted by the dispatcher for backward compatibility.
 
 Both route to the same on-chain handler. See [Pinocchio runtime, dual-mode dispatch](./INTEGRATION.md#program) for the dispatcher contract.
 
-### Account layout
+`CreateToken` carries **13 accounts** (post May 2026 update — was 12; the addition is the pre-allocated `communityPool` PDA at slot 9, which removes the prior implicit ~0.05 SOL minimum first-trade floor).
+
+### Account layout (13 accounts, post May 2026 update)
 
 Pulled directly from [`idl/control.json`](../idl/control.json) (instruction index 9 — `CreateToken`). The order is positional and stable.
 
 | #  | Account             | Role                  | Notes |
 |----|---------------------|-----------------------|-------|
 | 0  | `mint`              | writable + signer     | The new Token-2022 mint. One-shot keypair signer. |
-| 1  | `payer`             | writable + signer     | Token creator; pays rent + create-fee. |
+| 1  | `payer`             | writable + signer     | Token creator; pays rent + create-fee + community-pool rent. |
 | 2  | `admin`             | readonly + signer     | Control admin co-signer. Required — gates the instruction. |
 | 3  | `config`            | PDA, readonly         | Control config PDA. |
 | 4  | `curve`             | PDA, writable         | Control curve PDA, initialized in this tx. |
@@ -88,9 +92,12 @@ Pulled directly from [`idl/control.json`](../idl/control.json) (instruction inde
 | 6  | `vaultAta`          | writable              | Curve vault token account (Token-2022). |
 | 7  | `lpEscrow`          | PDA, writable         | LP escrow PDA seeded for this mint. |
 | 8  | `creatorFeeVault`   | PDA, writable         | Per-mint creator fee vault PDA. |
-| 9  | `systemProgram`     | readonly              | System program. |
-| 10 | `token2022Program`  | readonly              | Token-2022 program. |
-| 11 | `ataProgram`        | readonly              | Associated Token Program. |
+| 9  | `communityPool`     | PDA, writable         | Per-token community pool PDA, pre-allocated rent-exempt at `CreateToken` time. **Added May 2026** so first trades smaller than ~0.05 SOL no longer fail with `insufficient funds for rent` — the prior implicit floor is gone. |
+| 10 | `systemProgram`     | readonly              | System program. *(Was slot 9 before May 2026.)* |
+| 11 | `token2022Program`  | readonly              | Token-2022 program. *(Was slot 10.)* |
+| 12 | `ataProgram`        | readonly              | Associated Token Program. *(Was slot 11.)* |
+
+> Slots `0` (mint), `1` (payer / creator), and `4` (curve PDA) are unchanged from the pre-update layout — any indexer that only reads those positions to detect new launches keeps working without changes.
 
 ### What an integrator typically extracts
 
@@ -105,20 +112,16 @@ Refer to a Solscan-decoded sample tx (either Create signature in the tables abov
 
 ### Detecting new tokens in real time
 
-Subscribe to logs or transactions on the Control program ID and filter on either discriminator form:
+Use Solana logs subscription or transaction subscription on the Control program ID (`CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27`) and match `CreateToken` on either of the two accepted discriminator forms:
 
-```
-Program ID:                CTRL5CCEQw5zhhBeEV8n5GKZpf3E5tYQoXhhxzUAps27
-Match condition (legacy):  instruction_data[0] == 0x09
-Match condition (Anchor):  instruction_data[0..8] == [84, 52, 204, 228, 24, 140, 234, 75]
-```
+- **8-byte Anchor sighash** (current default — what every shipped client sends; what the IDL declares; what Solscan / SolanaFM / Anchor SDK match on): `data[0..8] == [84, 52, 204, 228, 24, 140, 234, 75]` (= `sha256("global:create_token")[..8]`; the leading byte is `0x54`, **NOT** `0x09`).
+- **Legacy 1-byte enum disc** (still accepted by the dispatcher for backward compatibility): `data[0] === 0x09`.
 
-Either filter is sufficient on its own — the dispatcher routes both forms to the same handler, so you do not need to match both. Pick the form your indexing pipeline already understands.
+A robust matcher checks **both**: indexers that filter only on `data[0] == 0x09` will silently miss every `CreateToken` submitted by Control's official services, the test scripts, or any Anchor SDK client — those all use the 8-byte form. With either match:
 
-Each match is a new mint launching on the platform. From there:
-
-1. Read account `#0` to get the new mint pubkey.
-2. Derive the curve PDA from the mint (or take account `#4` directly) — see [PDA derivation](./INTEGRATION.md#pda-derivation).
-3. Hand the mint to the parsers in the [Integration Guide](./INTEGRATION.md#typescript-examples) and you are ready to quote, buy, or sell.
+1. Account `0` is the new mint pubkey.
+2. Account `1` is the creator (token launcher) wallet.
+3. Account `4` is the curve PDA — start watching for trades from here. See [PDA derivation](./INTEGRATION.md#pda-derivation) if you prefer to re-derive it from the mint.
+4. Hand the mint to the parsers in the [Integration Guide](./INTEGRATION.md#typescript-examples) and you are ready to quote, buy, or sell.
 
 > **Reminder — parse only.** Do not attempt to construct or send a `CreateToken` transaction from your own client. It will fail without the admin signer, by design.
